@@ -1,10 +1,11 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData, useNavigate } from '@remix-run/react';
 import { useState } from 'react';
 import { Header } from '~/components/layout/Header';
 import { BottomNav } from '~/components/layout/BottomNav';
 import { QuickAddButton } from '~/components/layout/QuickAddButton';
 import { ContactCard } from '~/components/people/ContactCard';
+import { EmptyContacts, EmptySearchResults } from '~/components/shared/EmptyState';
 import { getContacts } from '~/lib/markdown.server';
 import { Search } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function PeopleRoute() {
   const { contacts } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredContacts = contacts.filter((contact) => {
@@ -54,12 +56,11 @@ export default function PeopleRoute() {
 
       <div className="flex-1 p-4 space-y-4 overflow-auto pb-20">
         {Object.keys(grouped).length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No contacts found</p>
-            <p className="text-gray-400 text-sm mt-2">
-              Tap + to add someone
-            </p>
-          </div>
+          searchQuery ? (
+            <EmptySearchResults />
+          ) : (
+            <EmptyContacts onAdd={() => navigate('/add')} />
+          )
         ) : (
           Object.entries(grouped).map(([relation, groupContacts]) => (
             <div key={relation}>

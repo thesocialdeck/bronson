@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from '@remix-run/react';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import type { ParseResponse } from '~/types';
+import { toast } from '~/components/shared/Toast';
 
 export default function AddRoute() {
   const navigate = useNavigate();
@@ -61,20 +62,40 @@ export default function AddRoute() {
       }
 
       const result = await response.json();
-      navigate(result.redirect || '/');
+      toast.success(result.message || 'Saved successfully! ✨');
+      setTimeout(() => navigate(result.redirect || '/'), 500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-      <div className="bg-white rounded-t-3xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) navigate(-1);
+      }}
+    >
+      <div
+        className="bg-white rounded-t-3xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-800">Quick Add</h2>
-          <button onClick={() => navigate(-1)} className="p-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Quick Add
+            </h2>
+          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close"
+          >
             <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
@@ -98,9 +119,17 @@ export default function AddRoute() {
             <button
               onClick={handleParse}
               disabled={!input.trim() || loading}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              {loading ? 'Processing...' : 'Parse with AI'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin">⏳</span> Processing...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Sparkles className="w-4 h-4" /> Parse with AI
+                </span>
+              )}
             </button>
           </>
         ) : (
@@ -164,16 +193,22 @@ export default function AddRoute() {
             <div className="flex space-x-3">
               <button
                 onClick={() => setPreview(null)}
-                className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50"
+                className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 Back
               </button>
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-colors disabled:opacity-50"
+                className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-all disabled:opacity-50 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                {loading ? 'Saving...' : 'Confirm'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span> Saving...
+                  </span>
+                ) : (
+                  '✨ Confirm'
+                )}
               </button>
             </div>
           </>

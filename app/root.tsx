@@ -7,6 +7,7 @@ import {
 } from '@remix-run/react';
 import type { LinksFunction } from '@remix-run/node';
 import './tailwind.css';
+import { ToastContainer, useToast } from '~/components/shared/Toast';
 
 export const links: LinksFunction = () => [];
 
@@ -29,5 +30,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { toasts, dismiss } = useToast();
+
+  return (
+    <>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      <Outlet />
+    </>
+  );
 }

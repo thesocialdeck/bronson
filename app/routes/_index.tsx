@@ -1,10 +1,11 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData, useNavigate } from '@remix-run/react';
 import { Header } from '~/components/layout/Header';
 import { BottomNav } from '~/components/layout/BottomNav';
 import { QuickAddButton } from '~/components/layout/QuickAddButton';
 import { PersonDayCard } from '~/components/today/PersonDayCard';
 import { FamilyEventCard } from '~/components/today/FamilyEventCard';
+import { EmptyEvents } from '~/components/shared/EmptyState';
 import { getTodaySchedule } from '~/lib/scheduler.server';
 import { groupEventsByPerson } from '~/lib/scheduler.server';
 import { getActivityTypes } from '~/lib/markdown.server';
@@ -42,6 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Index() {
   const { today, grouped, family } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -79,12 +81,7 @@ export default function Index() {
         ))}
 
         {Object.keys(grouped).length === 0 && family.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No events today</p>
-            <p className="text-gray-400 text-sm mt-2">
-              Tap + to add something
-            </p>
-          </div>
+          <EmptyEvents onAdd={() => navigate('/add')} />
         )}
       </div>
 

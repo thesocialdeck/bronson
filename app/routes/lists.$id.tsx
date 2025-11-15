@@ -4,6 +4,8 @@ import { ArrowLeft, Check } from 'lucide-react';
 import { getChecklist, updateChecklist, getActivityTypes } from '~/lib/markdown.server';
 import { DEFAULT_ACTIVITIES } from '~/lib/config';
 import * as Icons from 'lucide-react';
+import { Celebration } from '~/components/shared/Confetti';
+import { useState, useEffect } from 'react';
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const checklist = await getChecklist(params.id!);
@@ -40,11 +42,22 @@ export default function ChecklistDetailRoute() {
   const { checklist, activityType } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [prevCompleted, setPrevCompleted] = useState(0);
 
   const IconComponent = (Icons as any)[activityType.icon] as any;
   const completed = checklist.items.filter((i: any) => i.checked).length;
   const total = checklist.items.length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // Celebrate when checklist is completed!
+  useEffect(() => {
+    if (completed === total && total > 0 && completed > prevCompleted) {
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
+    }
+    setPrevCompleted(completed);
+  }, [completed, total]);
 
   const colorClasses = {
     cyan: { border: 'border-cyan-300', bg: 'bg-cyan-50', text: 'text-cyan-600', check: 'text-cyan-500' },
@@ -65,6 +78,11 @@ export default function ChecklistDetailRoute() {
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <Celebration
+        trigger={showCelebration}
+        message="All done! Great work! 🎉"
+        emoji="✨"
+      />
       <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <button
           onClick={() => navigate(-1)}
