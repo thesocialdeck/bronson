@@ -1,0 +1,16 @@
+⚠️ PWA Icons Required
+
+Please add the following files to this directory:
+
+1. icon-192.png (192x192 pixels)
+2. icon-512.png (512x512 pixels)
+
+See PWA_ICONS_README.md in the root directory for detailed instructions.
+
+For quick testing, you can use any 192x192 and 512x512 PNG images.
+The app is fully functional without them, but the PWA install prompt
+and home screen icon will use browser defaults.
+
+Recommended quick fix:
+- Use https://www.pwabuilder.com/imageGenerator
+- Or create simple purple squares as placeholders

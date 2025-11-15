@@ -1,0 +1,64 @@
+{
+  "name": "Bronson Family Scheduler",
+  "short_name": "Bronson",
+  "description": "The family scheduling app built for busy parents. Capture events instantly, spot conflicts, and never miss a birthday.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#9333ea",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Quick Add",
+      "short_name": "Add",
+      "description": "Quickly add an event, contact, or reminder",
+      "url": "/add",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Today",
+      "short_name": "Today",
+      "description": "View today's schedule",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Week View",
+      "short_name": "Week",
+      "description": "View the week timeline",
+      "url": "/week",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
