@@ -8,6 +8,7 @@ import { TimeBasedEvents } from '~/components/today/TimeBasedEvents';
 import { ActiveChecklistsSection } from '~/components/today/ActiveChecklistsSection';
 import { TomorrowPreview } from '~/components/today/TomorrowPreview';
 import { UpcomingBirthdaysSection } from '~/components/today/UpcomingBirthdaysSection';
+import { MorningPrepBanner } from '~/components/today/MorningPrepBanner';
 import { EmptyEvents } from '~/components/shared/EmptyState';
 import { getTodaySchedule, getTomorrowSchedule, groupEventsByPerson, categorizeEventsByTime, getUpcomingBirthdays } from '~/lib/scheduler.server';
 import { getActivityTypes, getChecklists } from '~/lib/markdown.server';
@@ -116,6 +117,9 @@ export default function Index() {
             urgentCount={urgentCount}
           />
         )}
+
+        {/* Morning Prep Banner */}
+        <MorningPrepBanner eventCount={eventCount} />
 
         {/* No events at all */}
         {!hasEvents && checklistCount === 0 && upcomingCount === 0 && birthdayCount === 0 && (
