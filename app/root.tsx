@@ -4,13 +4,17 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from '@remix-run/react';
-import type { LinksFunction, MetaFunction } from '@remix-run/node';
+import type { LinksFunction, MetaFunction, LoaderFunctionArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import './tailwind.css';
 import { ToastContainer, useToast } from '~/components/shared/Toast';
 import { InstallPrompt } from '~/components/pwa/InstallPrompt';
 import { OfflineIndicator } from '~/components/pwa/OfflineIndicator';
 import { usePWA } from '~/hooks/usePWA';
+import { OnboardingFlow } from '~/components/onboarding/OnboardingFlow';
+import { hasFamilySetup } from '~/lib/family.server';
 
 export const links: LinksFunction = () => [
   { rel: 'manifest', href: '/manifest.json' },
@@ -30,6 +34,11 @@ export const meta: MetaFunction = () => {
     { name: 'mobile-web-app-capable', content: 'yes' },
   ];
 };
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const hasFamily = await hasFamilySetup();
+  return json({ hasFamily });
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -51,6 +60,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const { toasts, dismiss } = useToast();
+  const { hasFamily } = useLoaderData<typeof loader>();
   usePWA(); // Register service worker
 
   return (
@@ -58,6 +68,7 @@ export default function App() {
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
       <OfflineIndicator />
       <InstallPrompt />
+      {!hasFamily && <OnboardingFlow />}
       <Outlet />
     </>
   );

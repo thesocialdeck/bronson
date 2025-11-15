@@ -7,14 +7,14 @@
 
 import { useState } from 'react';
 import { Edit3, Plus, Clock, Calendar, User, Tag, MapPin, FileText, Repeat } from 'lucide-react';
-import { FAMILY_MEMBERS } from '~/lib/config';
-import type { ParseResponse } from '~/types';
+import type { ParseResponse, FamilyMember } from '~/types';
 
 interface EditablePreviewProps {
   preview: ParseResponse;
   originalInput: string;
   onUpdate: (data: any) => void;
   onEditText: () => void;
+  familyMembers: FamilyMember[];
 }
 
 export function EditablePreview({
@@ -22,6 +22,7 @@ export function EditablePreview({
   originalInput,
   onUpdate,
   onEditText,
+  familyMembers,
 }: EditablePreviewProps) {
   const [editedData, setEditedData] = useState(preview.data);
   const [showOptional, setShowOptional] = useState({
@@ -86,6 +87,7 @@ export function EditablePreview({
               <PersonSelector
                 value={editedData.person}
                 onChange={(value) => updateField('person', value)}
+                familyMembers={familyMembers}
               />
             </FieldGroup>
 
@@ -254,6 +256,7 @@ export function EditablePreview({
               <PersonSelector
                 value={editedData.person}
                 onChange={(value) => updateField('person', value)}
+                familyMembers={familyMembers}
               />
             </FieldGroup>
           </>
@@ -308,12 +311,13 @@ function FieldGroup({ label, icon: Icon, required, children }: FieldGroupProps) 
 interface PersonSelectorProps {
   value: string;
   onChange: (value: string) => void;
+  familyMembers: FamilyMember[];
 }
 
-function PersonSelector({ value, onChange }: PersonSelectorProps) {
+function PersonSelector({ value, onChange, familyMembers }: PersonSelectorProps) {
   return (
     <div className="flex flex-wrap gap-2 flex-1">
-      {FAMILY_MEMBERS.map((member) => (
+      {familyMembers.map((member) => (
         <button
           key={member.name}
           onClick={() => onChange(member.name)}

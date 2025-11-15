@@ -1,16 +1,16 @@
 import { Clock, AlertCircle } from 'lucide-react';
 import { PersonDayCard } from './PersonDayCard';
 import { FamilyEventCard } from './FamilyEventCard';
-import { FAMILY_MEMBERS } from '~/lib/config';
 import type { FamilyMember } from '~/types';
 
 interface TimeBasedEventsProps {
   grouped: Record<string, any[]>;
   family: any[];
   timeCategory: 'now' | 'soon' | 'later';
+  familyMembers: FamilyMember[];
 }
 
-export function TimeBasedEvents({ grouped, family, timeCategory }: TimeBasedEventsProps) {
+export function TimeBasedEvents({ grouped, family, timeCategory, familyMembers }: TimeBasedEventsProps) {
   const hasEvents = Object.keys(grouped).length > 0 || family.length > 0;
 
   if (!hasEvents) return null;
@@ -52,7 +52,7 @@ export function TimeBasedEvents({ grouped, family, timeCategory }: TimeBasedEven
       </div>
 
       <div className="space-y-3">
-        {FAMILY_MEMBERS.map((member: FamilyMember) => {
+        {familyMembers.map((member: FamilyMember) => {
           const events = grouped[member.name];
           if (!events || events.length === 0) return null;
 

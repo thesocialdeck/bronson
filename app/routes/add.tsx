@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from '@remix-run/react';
+import { json, type LoaderFunctionArgs } from '@remix-run/node';
+import { useNavigate, useSearchParams, useLoaderData } from '@remix-run/react';
 import { X, Sparkles, Inbox } from 'lucide-react';
 import type { ParseResponse } from '~/types';
 import { toast } from '~/components/shared/Toast';
 import { EditablePreview } from '~/components/add/EditablePreview';
+import { getFamilyMembers } from '~/lib/family.server';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const familyMembers = await getFamilyMembers();
+  return json({ familyMembers });
+}
 
 export default function AddRoute() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { familyMembers } = useLoaderData<typeof loader>();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParseResponse | null>(null);
@@ -228,6 +236,7 @@ export default function AddRoute() {
               originalInput={input}
               onUpdate={handleUpdateData}
               onEditText={handleEditText}
+              familyMembers={familyMembers}
             />
 
             {error && (

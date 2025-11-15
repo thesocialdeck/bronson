@@ -12,10 +12,12 @@ import { MorningPrepBanner } from '~/components/today/MorningPrepBanner';
 import { EmptyEvents } from '~/components/shared/EmptyState';
 import { getTodaySchedule, getTomorrowSchedule, groupEventsByPerson, categorizeEventsByTime, getUpcomingBirthdays } from '~/lib/scheduler.server';
 import { getActivityTypes, getChecklists } from '~/lib/markdown.server';
+import { getFamilyMembers } from '~/lib/family.server';
 import { DEFAULT_ACTIVITIES } from '~/lib/config';
 import { Sun } from 'lucide-react';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const familyMembers = await getFamilyMembers();
   const todayData = await getTodaySchedule();
   const tomorrowData = await getTomorrowSchedule();
   const checklists = await getChecklists();
@@ -55,6 +57,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 
   return json({
+    familyMembers,
     today: todayData,
     tomorrow: tomorrowData,
     nowGrouped,
@@ -73,6 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Index() {
   const {
+    familyMembers,
     today,
     tomorrow,
     nowGrouped,
@@ -132,6 +136,7 @@ export default function Index() {
             grouped={nowGrouped.grouped}
             family={nowGrouped.family}
             timeCategory="now"
+            familyMembers={familyMembers}
           />
         )}
 
@@ -141,6 +146,7 @@ export default function Index() {
             grouped={soonGrouped.grouped}
             family={soonGrouped.family}
             timeCategory="soon"
+            familyMembers={familyMembers}
           />
         )}
 
@@ -160,6 +166,7 @@ export default function Index() {
             grouped={laterGrouped.grouped}
             family={laterGrouped.family}
             timeCategory="later"
+            familyMembers={familyMembers}
           />
         )}
 

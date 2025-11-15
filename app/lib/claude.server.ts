@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { FAMILY_MEMBERS, DEFAULT_ACTIVITIES, AVAILABLE_ICONS, AVAILABLE_COLORS } from './config';
+import { DEFAULT_ACTIVITIES, AVAILABLE_ICONS, AVAILABLE_COLORS } from './config';
 import { getActivityTypes, getRecurringEvents, getEvents, getContacts } from './markdown.server';
+import { getFamilyMembers } from './family.server';
 import type { ParseResponse } from '~/types';
 
 const client = new Anthropic({
@@ -9,6 +10,7 @@ const client = new Anthropic({
 
 export async function parseInput(input: string): Promise<ParseResponse> {
   // Get current data for matching
+  const familyMembers = await getFamilyMembers();
   const customActivities = await getActivityTypes();
   const allActivities = { ...DEFAULT_ACTIVITIES, ...customActivities };
   const recurringEvents = await getRecurringEvents();
@@ -17,7 +19,7 @@ export async function parseInput(input: string): Promise<ParseResponse> {
 
   const systemPrompt = `You are a family schedule assistant. Parse natural language and create structured data.
 
-CORE FAMILY: ${FAMILY_MEMBERS.map(m => m.name).join(', ')}
+CORE FAMILY: ${familyMembers.map(m => m.name).join(', ')}
 KNOWN ACTIVITIES: ${Object.keys(allActivities).join(', ')}
 
 IMPORTANT: You can CREATE, UPDATE, or DELETE entries.

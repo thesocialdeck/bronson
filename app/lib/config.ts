@@ -1,11 +1,8 @@
 import type { FamilyMember, ActivityType } from '~/types';
 
-export const FAMILY_MEMBERS: FamilyMember[] = [
-  { name: 'Oliver', color: 'blue', avatar: 'O' },
-  { name: 'Ella', color: 'pink', avatar: 'E' },
-  { name: 'Kate', color: 'emerald', avatar: 'K' },
-  { name: 'Steven', color: 'amber', avatar: 'S' },
-];
+// NOTE: Family members are now loaded dynamically from data/family.md
+// This is just kept for backward compatibility
+export const FAMILY_MEMBERS: FamilyMember[] = [];
 
 export const DEFAULT_ACTIVITIES: Record<string, ActivityType> = {
   triathlon: { icon: 'Flame', color: 'orange', underlineStyle: 'wavy' },
