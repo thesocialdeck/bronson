@@ -97,6 +97,13 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// Handle messages from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-inbox') {

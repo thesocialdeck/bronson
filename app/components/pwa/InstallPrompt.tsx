@@ -30,28 +30,34 @@ export function InstallPrompt() {
       }
     }
 
+    let showPromptTimer: NodeJS.Timeout | null = null;
+
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
       // Show prompt after user has used app a bit (3 seconds)
-      setTimeout(() => {
+      showPromptTimer = setTimeout(() => {
         setShowPrompt(true);
       }, 3000);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Detect if app was installed
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      if (showPromptTimer) {
+        clearTimeout(showPromptTimer);
+      }
     };
   }, []);
 

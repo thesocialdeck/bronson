@@ -27,7 +27,7 @@ export function WeekOverview({ days, totalEvents, conflictCount, busiestDay }: W
         Week at a Glance
       </h3>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Total Events */}
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -50,6 +50,17 @@ export function WeekOverview({ days, totalEvents, conflictCount, busiestDay }: W
           </div>
         </div>
 
+        {/* Average per day */}
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+            <TrendingDown className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-gray-900">{avgEventsPerDay}</p>
+            <p className="text-xs text-gray-600">Per Day</p>
+          </div>
+        </div>
+
         {/* Conflicts */}
         {conflictCount > 0 && (
           <div className="flex items-center gap-2">
@@ -62,17 +73,6 @@ export function WeekOverview({ days, totalEvents, conflictCount, busiestDay }: W
             </div>
           </div>
         )}
-
-        {/* Average per day */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-            <TrendingDown className="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{avgEventsPerDay}</p>
-            <p className="text-xs text-gray-600">Per Day</p>
-          </div>
-        </div>
       </div>
 
       {/* Busiest Day */}

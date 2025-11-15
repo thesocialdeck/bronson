@@ -16,28 +16,48 @@ export function CountdownTimer({ eventName, eventTime, person }: CountdownTimerP
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const now = new Date();
-      const [eventHours, eventMinutes] = eventTime.split(':').map(Number);
+      try {
+        const now = new Date();
+        const timeParts = eventTime.split(':');
 
-      const eventDate = new Date();
-      eventDate.setHours(eventHours, eventMinutes, 0, 0);
+        if (timeParts.length !== 2) {
+          setTimeLeft(null);
+          return;
+        }
 
-      const diff = eventDate.getTime() - now.getTime();
-      const minutes = Math.floor(diff / 1000 / 60);
+        const [eventHours, eventMinutes] = timeParts.map(Number);
 
-      if (minutes <= 0) {
+        // Validate parsed numbers
+        if (isNaN(eventHours) || isNaN(eventMinutes) ||
+            eventHours < 0 || eventHours > 23 ||
+            eventMinutes < 0 || eventMinutes > 59) {
+          setTimeLeft(null);
+          return;
+        }
+
+        const eventDate = new Date();
+        eventDate.setHours(eventHours, eventMinutes, 0, 0);
+
+        const diff = eventDate.getTime() - now.getTime();
+        const minutes = Math.floor(diff / 1000 / 60);
+
+        if (minutes <= 0) {
+          setTimeLeft(null);
+          return;
+        }
+
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+
+        setTimeLeft({
+          hours,
+          minutes: remainingMinutes,
+          isUrgent: minutes <= 30,
+        });
+      } catch (error) {
+        console.error('[CountdownTimer] Error calculating time:', error);
         setTimeLeft(null);
-        return;
       }
-
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-
-      setTimeLeft({
-        hours,
-        minutes: remainingMinutes,
-        isUrgent: minutes <= 30,
-      });
     };
 
     calculateTimeLeft();

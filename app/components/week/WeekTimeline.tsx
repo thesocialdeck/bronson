@@ -2,6 +2,12 @@ import { FAMILY_MEMBERS, PERSON_COLORS } from '~/lib/config';
 import { AlertTriangle } from 'lucide-react';
 import type { ActivityType } from '~/types';
 
+// Timeline constants
+const TIMELINE_START_HOUR = 6; // 6am
+const TIMELINE_END_HOUR = 21; // 9pm
+const PIXELS_PER_HOUR = 64;
+const MIN_EVENT_HEIGHT = 48;
+
 interface Event {
   id?: string;
   person: string;
@@ -27,32 +33,55 @@ interface WeekTimelineProps {
 }
 
 export function WeekTimeline({ days }: WeekTimelineProps) {
-  // Time slots from 6am to 9pm (15 hours)
-  const timeSlots = Array.from({ length: 16 }, (_, i) => i + 6); // 6-21 (6am-9pm)
+  // Time slots from start to end hour
+  const timeSlots = Array.from(
+    { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
+    (_, i) => i + TIMELINE_START_HOUR
+  );
 
   const getEventPosition = (event: Event) => {
-    const [hours, minutes] = event.time.split(':').map(Number);
-    const startMinutes = (hours - 6) * 60 + minutes; // Minutes from 6am
+    try {
+      const timeParts = event.time.split(':');
+      if (timeParts.length !== 2) return { top: 0, height: MIN_EVENT_HEIGHT };
 
-    // Calculate duration
-    let durationMinutes = event.duration || 60;
-    if (event.endTime) {
-      const [endHours, endMinutes] = event.endTime.split(':').map(Number);
-      const endTotalMinutes = endHours * 60 + endMinutes;
-      const startTotalMinutes = hours * 60 + minutes;
-      durationMinutes = endTotalMinutes - startTotalMinutes;
+      const [hours, minutes] = timeParts.map(Number);
+
+      // Validate parsed numbers
+      if (isNaN(hours) || isNaN(minutes)) return { top: 0, height: MIN_EVENT_HEIGHT };
+
+      // Clamp hours to timeline range
+      const clampedHours = Math.max(TIMELINE_START_HOUR, Math.min(TIMELINE_END_HOUR, hours));
+      const startMinutes = (clampedHours - TIMELINE_START_HOUR) * 60 + minutes;
+
+      // Calculate duration
+      let durationMinutes = event.duration || 60;
+      if (event.endTime) {
+        const endParts = event.endTime.split(':');
+        if (endParts.length === 2) {
+          const [endHours, endMinutes] = endParts.map(Number);
+          if (!isNaN(endHours) && !isNaN(endMinutes)) {
+            const endTotalMinutes = endHours * 60 + endMinutes;
+            const startTotalMinutes = hours * 60 + minutes;
+            durationMinutes = Math.max(endTotalMinutes - startTotalMinutes, 15); // Minimum 15 min
+          }
+        }
+      }
+
+      // Each hour is represented as a slot, calculate position within the grid
+      const top = Math.max(0, (startMinutes / 60) * PIXELS_PER_HOUR);
+      const height = Math.max((durationMinutes / 60) * PIXELS_PER_HOUR, MIN_EVENT_HEIGHT);
+
+      return { top, height };
+    } catch (error) {
+      console.error('[WeekTimeline] Error calculating event position:', error);
+      return { top: 0, height: MIN_EVENT_HEIGHT };
     }
-
-    // Each hour is represented as a slot, calculate position within the grid
-    const top = (startMinutes / 60) * 64; // 64px per hour
-    const height = Math.max((durationMinutes / 60) * 64, 48); // Minimum 48px height
-
-    return { top, height };
   };
 
   const isInConflict = (event: Event, conflicts: DayData['conflicts']) => {
     return conflicts.some(
-      c => c.event1 === event || c.event2 === event
+      c => (c.event1.id === event.id && c.event1.time === event.time) ||
+           (c.event2.id === event.id && c.event2.time === event.time)
     );
   };
 

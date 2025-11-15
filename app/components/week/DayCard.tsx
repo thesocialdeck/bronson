@@ -18,7 +18,10 @@ interface DayCardProps {
 
 export function DayCard({ day, date, isToday, events, conflicts = [] }: DayCardProps) {
   const isInConflict = (event: any) => {
-    return conflicts.some(c => c.event1 === event || c.event2 === event);
+    return conflicts.some(
+      c => (c.event1.time === event.time && c.event1.person === event.person) ||
+           (c.event2.time === event.time && c.event2.person === event.person)
+    );
   };
 
   return (
@@ -60,14 +63,12 @@ export function DayCard({ day, date, isToday, events, conflicts = [] }: DayCardP
                 >
                   {hasConflict && <AlertTriangle className="w-4 h-4 text-red-600" />}
                   {IconComponent && (
-                    <IconComponent className={`w-4 h-4 text-${event.activityType.color}-500`} />
+                    <IconComponent className="w-4 h-4" style={{ color: `var(--color-${event.activityType.color}-500, #6b7280)` }} />
                   )}
                   <span className={`text-sm font-medium ${personColor?.text || 'text-gray-700'}`}>
                     {event.person}
                   </span>
-                  <span
-                    className={`text-sm underline decoration-2 decoration-${event.activityType.color}-400`}
-                  >
+                  <span className="text-sm underline decoration-2">
                     {event.activity}
                   </span>
                   <span className="text-xs text-gray-500">{formatTime(event.time)}</span>
