@@ -6,28 +6,37 @@
     "dev": "remix vite:dev",
     "build": "remix vite:build",
     "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:live": "tsx tests/run-live-tests.ts",
+    "test:live:sample": "tsx tests/run-live-tests.ts --limit=20"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@remix-run/node": "^2.13.1",
     "@remix-run/react": "^2.13.1",
     "@remix-run/serve": "^2.13.1",
-    "@anthropic-ai/sdk": "^0.32.1",
-    "lucide-react": "^0.462.0",
-    "gray-matter": "^4.0.3",
     "date-fns": "^4.1.0",
+    "gray-matter": "^4.0.3",
+    "isbot": "^5.1.21",
+    "lucide-react": "^0.462.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "isbot": "^5.1.21"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.13.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@vitest/ui": "^4.0.9",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.2.3",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.20.6",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^4.0.9"
   }
 }
