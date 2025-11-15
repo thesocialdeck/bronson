@@ -7,8 +7,9 @@ import { DayOverview } from '~/components/today/DayOverview';
 import { TimeBasedEvents } from '~/components/today/TimeBasedEvents';
 import { ActiveChecklistsSection } from '~/components/today/ActiveChecklistsSection';
 import { TomorrowPreview } from '~/components/today/TomorrowPreview';
+import { UpcomingBirthdaysSection } from '~/components/today/UpcomingBirthdaysSection';
 import { EmptyEvents } from '~/components/shared/EmptyState';
-import { getTodaySchedule, getTomorrowSchedule, groupEventsByPerson, categorizeEventsByTime } from '~/lib/scheduler.server';
+import { getTodaySchedule, getTomorrowSchedule, groupEventsByPerson, categorizeEventsByTime, getUpcomingBirthdays } from '~/lib/scheduler.server';
 import { getActivityTypes, getChecklists } from '~/lib/markdown.server';
 import { DEFAULT_ACTIVITIES } from '~/lib/config';
 import { Sun } from 'lucide-react';
@@ -17,6 +18,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const todayData = await getTodaySchedule();
   const tomorrowData = await getTomorrowSchedule();
   const checklists = await getChecklists();
+  const upcomingBirthdays = await getUpcomingBirthdays(14); // Next 14 days
   const customActivities = await getActivityTypes();
   const allActivities = { ...DEFAULT_ACTIVITIES, ...customActivities };
 
@@ -59,10 +61,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     laterGrouped,
     tomorrowEvents: enrichedTomorrowEvents,
     checklists: activeChecklists,
+    upcomingBirthdays,
     eventCount: enrichedTodayEvents.length,
     checklistCount: activeChecklists.length,
     upcomingCount: enrichedTomorrowEvents.length,
     urgentCount: nowEvents.length,
+    birthdayCount: upcomingBirthdays.length,
   });
 }
 
@@ -75,10 +79,12 @@ export default function Index() {
     laterGrouped,
     tomorrowEvents,
     checklists,
+    upcomingBirthdays,
     eventCount,
     checklistCount,
     upcomingCount,
     urgentCount,
+    birthdayCount,
   } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
 
@@ -102,7 +108,7 @@ export default function Index() {
 
       <div className="flex-1 p-4 space-y-4 overflow-auto pb-20">
         {/* Day Overview */}
-        {(hasEvents || checklistCount > 0 || upcomingCount > 0) && (
+        {(hasEvents || checklistCount > 0 || upcomingCount > 0 || birthdayCount > 0) && (
           <DayOverview
             eventCount={eventCount}
             checklistCount={checklistCount}
@@ -112,7 +118,7 @@ export default function Index() {
         )}
 
         {/* No events at all */}
-        {!hasEvents && checklistCount === 0 && upcomingCount === 0 && (
+        {!hasEvents && checklistCount === 0 && upcomingCount === 0 && birthdayCount === 0 && (
           <EmptyEvents onAdd={() => navigate('/add')} />
         )}
 
@@ -132,6 +138,11 @@ export default function Index() {
             family={soonGrouped.family}
             timeCategory="soon"
           />
+        )}
+
+        {/* Upcoming Birthdays */}
+        {birthdayCount > 0 && (
+          <UpcomingBirthdaysSection birthdays={upcomingBirthdays} />
         )}
 
         {/* Active Checklists */}

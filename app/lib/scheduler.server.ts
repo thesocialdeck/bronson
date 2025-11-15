@@ -1,6 +1,7 @@
-import { getRecurringEvents, getEvents } from './markdown.server';
+import { getRecurringEvents, getEvents, getContacts } from './markdown.server';
 import { getTodayInfo, getDayOfWeek, getWeekDays, getTomorrowInfo } from './utils';
-import type { ScheduleEvent } from '~/types';
+import type { ScheduleEvent, Contact } from '~/types';
+import { parseISO, differenceInDays, format, addYears, isBefore, startOfDay } from 'date-fns';
 
 export async function getTodaySchedule() {
   const today = getTodayInfo();
@@ -138,4 +139,41 @@ export function categorizeEventsByTime(events: any[]) {
   });
 
   return { nowEvents, soonEvents, laterEvents };
+}
+
+// Get upcoming birthdays (next 14 days)
+export async function getUpcomingBirthdays(daysAhead: number = 14) {
+  const contacts = await getContacts();
+  const today = startOfDay(new Date());
+  const currentYear = today.getFullYear();
+
+  const upcomingBirthdays = contacts
+    .filter(contact => contact.birthday) // Only contacts with birthdays
+    .map(contact => {
+      const birthdayDate = parseISO(contact.birthday!);
+      const birthYear = birthdayDate.getFullYear();
+
+      // Get this year's birthday
+      let nextBirthday = new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate());
+
+      // If birthday already passed this year, use next year
+      if (isBefore(nextBirthday, today)) {
+        nextBirthday = addYears(nextBirthday, 1);
+      }
+
+      const daysUntil = differenceInDays(startOfDay(nextBirthday), today);
+      const age = nextBirthday.getFullYear() - birthYear;
+
+      return {
+        contact,
+        daysUntil,
+        age,
+        nextBirthday,
+        formattedDate: format(nextBirthday, 'EEEE, MMMM d'),
+      };
+    })
+    .filter(birthday => birthday.daysUntil <= daysAhead) // Only next X days
+    .sort((a, b) => a.daysUntil - b.daysUntil); // Sort by soonest first
+
+  return upcomingBirthdays;
 }
