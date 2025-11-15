@@ -53,6 +53,17 @@ export function getTodayInfo() {
   };
 }
 
+export function getTomorrowInfo() {
+  const tomorrow = addDays(new Date(), 1);
+  return {
+    date: formatDate(tomorrow),
+    dayName: format(tomorrow, 'EEEE'),
+    dayShort: format(tomorrow, 'EEE'),
+    dayNum: format(tomorrow, 'd'),
+    fullDate: format(tomorrow, 'MMMM d, yyyy'),
+  };
+}
+
 // Get activity color classes
 export function getActivityClasses(color: string) {
   return {

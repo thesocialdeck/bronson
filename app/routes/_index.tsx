@@ -3,21 +3,22 @@ import { useLoaderData, useNavigate } from '@remix-run/react';
 import { Header } from '~/components/layout/Header';
 import { BottomNav } from '~/components/layout/BottomNav';
 import { QuickAddButton } from '~/components/layout/QuickAddButton';
-import { PersonDayCard } from '~/components/today/PersonDayCard';
-import { FamilyEventCard } from '~/components/today/FamilyEventCard';
+import { DayOverview } from '~/components/today/DayOverview';
+import { TimeBasedEvents } from '~/components/today/TimeBasedEvents';
+import { ActiveChecklistsSection } from '~/components/today/ActiveChecklistsSection';
+import { TomorrowPreview } from '~/components/today/TomorrowPreview';
 import { EmptyEvents } from '~/components/shared/EmptyState';
-import { getTodaySchedule } from '~/lib/scheduler.server';
-import { groupEventsByPerson } from '~/lib/scheduler.server';
-import { getActivityTypes } from '~/lib/markdown.server';
-import { FAMILY_MEMBERS, DEFAULT_ACTIVITIES } from '~/lib/config';
+import { getTodaySchedule, getTomorrowSchedule, groupEventsByPerson, categorizeEventsByTime } from '~/lib/scheduler.server';
+import { getActivityTypes, getChecklists } from '~/lib/markdown.server';
+import { DEFAULT_ACTIVITIES } from '~/lib/config';
 import { Sun } from 'lucide-react';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const todayData = await getTodaySchedule();
+  const tomorrowData = await getTomorrowSchedule();
+  const checklists = await getChecklists();
   const customActivities = await getActivityTypes();
   const allActivities = { ...DEFAULT_ACTIVITIES, ...customActivities };
-
-  const { grouped, family } = groupEventsByPerson(todayData.events);
 
   // Add activity type details to events
   const enrichEvent = (event: any) => ({
@@ -25,25 +26,66 @@ export async function loader({ request }: LoaderFunctionArgs) {
     activityType: allActivities[event.type] || DEFAULT_ACTIVITIES.school,
   });
 
-  const enrichedGrouped = Object.fromEntries(
-    Object.entries(grouped).map(([person, events]: [string, any]) => [
-      person,
-      (events as any[]).map(enrichEvent),
-    ])
-  );
+  // Enrich all today's events
+  const enrichedTodayEvents = todayData.events.map(enrichEvent);
 
-  const enrichedFamily = family.map(enrichEvent);
+  // Categorize today's events by time
+  const { nowEvents, soonEvents, laterEvents } = categorizeEventsByTime(enrichedTodayEvents);
+
+  // Group each time category by person
+  const nowGrouped = groupEventsByPerson(nowEvents);
+  const soonGrouped = groupEventsByPerson(soonEvents);
+  const laterGrouped = groupEventsByPerson(laterEvents);
+
+  // Enrich tomorrow's events
+  const enrichedTomorrowEvents = tomorrowData.events.map(enrichEvent);
+
+  // Enrich checklists
+  const enrichedChecklists = checklists.map((checklist) => ({
+    ...checklist,
+    activityType: allActivities[checklist.type] || DEFAULT_ACTIVITIES.school,
+  }));
+
+  // Filter active checklists (incomplete ones)
+  const activeChecklists = enrichedChecklists.filter(
+    checklist => checklist.items.some(item => !item.checked)
+  );
 
   return json({
     today: todayData,
-    grouped: enrichedGrouped,
-    family: enrichedFamily,
+    tomorrow: tomorrowData,
+    nowGrouped,
+    soonGrouped,
+    laterGrouped,
+    tomorrowEvents: enrichedTomorrowEvents,
+    checklists: activeChecklists,
+    eventCount: enrichedTodayEvents.length,
+    checklistCount: activeChecklists.length,
+    upcomingCount: enrichedTomorrowEvents.length,
+    urgentCount: nowEvents.length,
   });
 }
 
 export default function Index() {
-  const { today, grouped, family } = useLoaderData<typeof loader>();
+  const {
+    today,
+    tomorrow,
+    nowGrouped,
+    soonGrouped,
+    laterGrouped,
+    tomorrowEvents,
+    checklists,
+    eventCount,
+    checklistCount,
+    upcomingCount,
+    urgentCount,
+  } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+
+  const hasEvents = eventCount > 0;
+  const hasNowEvents = Object.keys(nowGrouped.grouped).length > 0 || nowGrouped.family.length > 0;
+  const hasSoonEvents = Object.keys(soonGrouped.grouped).length > 0 || soonGrouped.family.length > 0;
+  const hasLaterEvents = Object.keys(laterGrouped.grouped).length > 0 || laterGrouped.family.length > 0;
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -59,29 +101,60 @@ export default function Index() {
       />
 
       <div className="flex-1 p-4 space-y-4 overflow-auto pb-20">
-        {FAMILY_MEMBERS.map((member) => {
-          const events = grouped[member.name];
-          if (!events || events.length === 0) return null;
-
-          return (
-            <PersonDayCard key={member.name} person={member} events={events} />
-          );
-        })}
-
-        {family.map((event, idx) => (
-          <FamilyEventCard
-            key={idx}
-            activity={event.activity}
-            time={event.time}
-            activityType={event.activityType}
-            people={event.person}
-            location={event.location}
-            notes={event.notes}
+        {/* Day Overview */}
+        {(hasEvents || checklistCount > 0 || upcomingCount > 0) && (
+          <DayOverview
+            eventCount={eventCount}
+            checklistCount={checklistCount}
+            upcomingCount={upcomingCount}
+            urgentCount={urgentCount}
           />
-        ))}
+        )}
 
-        {Object.keys(grouped).length === 0 && family.length === 0 && (
+        {/* No events at all */}
+        {!hasEvents && checklistCount === 0 && upcomingCount === 0 && (
           <EmptyEvents onAdd={() => navigate('/add')} />
+        )}
+
+        {/* Happening Now */}
+        {hasNowEvents && (
+          <TimeBasedEvents
+            grouped={nowGrouped.grouped}
+            family={nowGrouped.family}
+            timeCategory="now"
+          />
+        )}
+
+        {/* Coming Soon */}
+        {hasSoonEvents && (
+          <TimeBasedEvents
+            grouped={soonGrouped.grouped}
+            family={soonGrouped.family}
+            timeCategory="soon"
+          />
+        )}
+
+        {/* Active Checklists */}
+        {checklistCount > 0 && (
+          <ActiveChecklistsSection checklists={checklists} />
+        )}
+
+        {/* Later Today */}
+        {hasLaterEvents && (
+          <TimeBasedEvents
+            grouped={laterGrouped.grouped}
+            family={laterGrouped.family}
+            timeCategory="later"
+          />
+        )}
+
+        {/* Tomorrow Preview */}
+        {upcomingCount > 0 && (
+          <TomorrowPreview
+            date={tomorrow.fullDate}
+            dayName={tomorrow.dayName}
+            events={tomorrowEvents}
+          />
         )}
       </div>
 
