@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { parseMarkdownEntries, stringifyMarkdownEntry, updateMarkdownEntry, deleteMarkdownEntry } from './parser.server';
-import type { ScheduleEvent, RecurringEvent, Contact, Checklist, ActivityType } from '~/types';
+import type { ScheduleEvent, RecurringEvent, Contact, Checklist, ActivityType, InboxItem } from '~/types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 
@@ -172,4 +172,44 @@ export async function deleteChecklist(id: string): Promise<void> {
   } catch (error) {
     // File doesn't exist, ignore
   }
+}
+
+// Inbox items (for review later)
+export async function getInboxItems(): Promise<InboxItem[]> {
+  const filePath = path.join(DATA_DIR, 'inbox', 'items.json');
+  try {
+    const content = await readFile(filePath);
+    return content ? JSON.parse(content) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveInboxItem(item: InboxItem): Promise<void> {
+  const items = await getInboxItems();
+  items.push(item);
+  const filePath = path.join(DATA_DIR, 'inbox', 'items.json');
+  await writeFile(filePath, JSON.stringify(items, null, 2));
+}
+
+export async function updateInboxItem(id: string, updates: Partial<InboxItem>): Promise<void> {
+  const items = await getInboxItems();
+  const index = items.findIndex(i => i.id === id);
+  if (index !== -1) {
+    items[index] = { ...items[index], ...updates };
+    const filePath = path.join(DATA_DIR, 'inbox', 'items.json');
+    await writeFile(filePath, JSON.stringify(items, null, 2));
+  }
+}
+
+export async function deleteInboxItem(id: string): Promise<void> {
+  const items = await getInboxItems();
+  const filtered = items.filter(i => i.id !== id);
+  const filePath = path.join(DATA_DIR, 'inbox', 'items.json');
+  await writeFile(filePath, JSON.stringify(filtered, null, 2));
+}
+
+export async function getPendingInboxItems(): Promise<InboxItem[]> {
+  const items = await getInboxItems();
+  return items.filter(i => i.status === 'pending');
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@remix-run/react';
-import { Home, Calendar, Users, CheckSquare } from 'lucide-react';
+import { Home, Calendar, Inbox, Users, CheckSquare } from 'lucide-react';
 
 export function BottomNav() {
   const location = useLocation();
@@ -13,6 +13,7 @@ export function BottomNav() {
   const links = [
     { to: '/', icon: Home, label: 'Today' },
     { to: '/week', icon: Calendar, label: 'Week' },
+    { to: '/review', icon: Inbox, label: 'Review' },
     { to: '/people', icon: Users, label: 'People' },
     { to: '/lists', icon: CheckSquare, label: 'Lists' },
   ];

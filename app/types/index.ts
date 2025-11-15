@@ -132,3 +132,19 @@ export interface SaveResponse {
   message: string;
   redirect?: string;
 }
+
+// Inbox/Review Later types
+export interface InboxItem {
+  id: string;
+  rawText: string;
+  createdAt: string;
+  source: 'manual' | 'sms' | 'email' | 'voice';
+
+  // Parsed data (null until reviewed)
+  parsed?: ParseResponse;
+  parsedAt?: string;
+
+  // Status
+  status: 'pending' | 'approved' | 'rejected';
+  reviewedAt?: string;
+}

@@ -1,17 +1,27 @@
-import { useState } from 'react';
-import { useNavigate } from '@remix-run/react';
-import { X, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from '@remix-run/react';
+import { X, Sparkles, Inbox } from 'lucide-react';
 import type { ParseResponse } from '~/types';
 import { toast } from '~/components/shared/Toast';
 import { EditablePreview } from '~/components/add/EditablePreview';
 
 export default function AddRoute() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParseResponse | null>(null);
   const [editedData, setEditedData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inboxId, setInboxId] = useState<string | null>(null);
+
+  // Pre-fill input from query params (when editing from review screen)
+  useEffect(() => {
+    const text = searchParams.get('text');
+    const id = searchParams.get('inboxId');
+    if (text) setInput(decodeURIComponent(text));
+    if (id) setInboxId(id);
+  }, [searchParams]);
 
   const handleParse = async () => {
     if (!input.trim()) return;
@@ -52,6 +62,41 @@ export default function AddRoute() {
     setEditedData(data);
   };
 
+  const handleSaveForLater = async () => {
+    if (!input.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/inbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          data: {
+            rawText: input,
+            source: 'manual',
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save for later');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Saved for later! ✨');
+      setTimeout(() => navigate('/review'), 500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () =>  {
     if (!preview) return;
 
@@ -59,6 +104,18 @@ export default function AddRoute() {
     setError(null);
 
     try {
+      // If this was from inbox, delete the inbox item after saving
+      if (inboxId) {
+        await fetch('/api/inbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete',
+            id: inboxId,
+          }),
+        });
+      }
+
       const response = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,7 +135,7 @@ export default function AddRoute() {
 
       const result = await response.json();
       toast.success(result.message || 'Saved successfully! ✨');
-      setTimeout(() => navigate(result.redirect || '/'), 500);
+      setTimeout(() => navigate(inboxId ? '/review' : (result.redirect || '/')), 500);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save';
       setError(message);
@@ -131,21 +188,38 @@ export default function AddRoute() {
               </div>
             )}
 
-            <button
-              onClick={handleParse}
-              disabled={!input.trim() || loading}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin">⏳</span> Processing...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Parse with AI
-                </span>
-              )}
-            </button>
+            <div className="flex space-x-3 pt-2">
+              <button
+                onClick={handleSaveForLater}
+                disabled={!input.trim() || loading}
+                className="flex-1 py-3 border-2 border-purple-300 text-purple-700 font-medium rounded-2xl hover:bg-purple-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span> Saving...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Inbox className="w-4 h-4" /> Save for Later
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleParse}
+                disabled={!input.trim() || loading}
+                className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span> Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Review & Add
+                  </span>
+                )}
+              </button>
+            </div>
           </>
         ) : (
           <>
