@@ -1,0 +1,787 @@
+/* Font imports - must be first */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================
+   BRONSON - "Warm Paper" Theme
+   A calm, editorial design for a family calendar
+   ============================================ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   BASE THEME VARIABLES
+   ============================================ */
+
+:root {
+    /* Core palette - warm paper tones */
+    --radius: 0.5rem;
+
+    /* Backgrounds */
+    --background: oklch(0.98 0.005 85); /* Warm off-white */
+    --background-elevated: oklch(1 0 0); /* Pure white for cards */
+    --background-sunken: oklch(0.96 0.008 85); /* Slightly darker warm */
+
+    /* Foreground */
+    --foreground: oklch(0.25 0.02 50); /* Warm charcoal */
+    --foreground-muted: oklch(0.55 0.01 50); /* Warm gray */
+    --foreground-subtle: oklch(0.72 0.01 50); /* Light warm gray */
+
+    /* Borders */
+    --border: oklch(0.9 0.01 85); /* Warm light border */
+    --border-strong: oklch(0.82 0.015 85); /* More visible border */
+
+    /* Primary accent - warm coral/terracotta */
+    --primary: oklch(0.62 0.18 25);
+    --primary-foreground: oklch(0.99 0 0);
+    --primary-muted: oklch(0.62 0.18 25 / 15%);
+
+    /* Secondary - muted sage */
+    --secondary: oklch(0.94 0.02 140);
+    --secondary-foreground: oklch(0.35 0.05 140);
+
+    /* Accent - soft lavender */
+    --accent: oklch(0.94 0.03 280);
+    --accent-foreground: oklch(0.4 0.12 280);
+
+    /* Status colors */
+    --success: oklch(0.72 0.15 145);
+    --success-muted: oklch(0.72 0.15 145 / 15%);
+    --warning: oklch(0.78 0.15 75);
+    --warning-muted: oklch(0.78 0.15 75 / 15%);
+    --destructive: oklch(0.6 0.2 25);
+    --destructive-muted: oklch(0.6 0.2 25 / 15%);
+
+    /* Interactive */
+    --ring: oklch(0.62 0.18 25 / 40%);
+    --input: oklch(0.96 0.005 85);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px oklch(0.25 0.02 50 / 5%);
+    --shadow-md:
+        0 4px 6px oklch(0.25 0.02 50 / 7%), 0 1px 3px oklch(0.25 0.02 50 / 5%);
+    --shadow-lg:
+        0 10px 15px oklch(0.25 0.02 50 / 8%), 0 4px 6px oklch(0.25 0.02 50 / 4%);
+
+    /* Card */
+    --card: var(--background-elevated);
+    --card-foreground: var(--foreground);
+
+    /* Popover */
+    --popover: var(--background-elevated);
+    --popover-foreground: var(--foreground);
+
+    /* Muted */
+    --muted: var(--background-sunken);
+    --muted-foreground: var(--foreground-muted);
+
+    /* ============================================
+     SYNTAX HIGHLIGHTING - Light Mode
+     ============================================ */
+
+    /* Editor chrome */
+    --editor-bg: oklch(0.99 0.003 85);
+    --editor-gutter: oklch(0.97 0.005 85);
+    --editor-line-highlight: oklch(0.62 0.18 25 / 8%);
+    --editor-cursor: oklch(0.62 0.18 25);
+
+    /* Syntax colors */
+    --syntax-text: oklch(0.3 0.02 50);
+    --syntax-comment: oklch(0.6 0.01 50);
+    --syntax-heading-1: oklch(0.5 0.15 25);
+    --syntax-heading-2: oklch(0.5 0.12 280);
+    --syntax-heading-3: oklch(0.45 0.12 200);
+    --syntax-time: oklch(0.55 0.15 75);
+    --syntax-location: oklch(0.5 0.12 200);
+    --syntax-modifier: oklch(0.55 0.12 320);
+    --syntax-recurrence: oklch(0.5 0.15 320);
+    --syntax-field-key: oklch(0.55 0.12 320);
+    --syntax-note: oklch(0.5 0.02 50);
+
+    /* ============================================
+     PEOPLE COLORS
+     ============================================ */
+    --person-marcus: oklch(0.6 0.15 240);
+    --person-ella: oklch(0.62 0.18 340);
+    --person-sarah: oklch(0.65 0.15 145);
+    --person-steven: oklch(0.68 0.15 55);
+    --person-family: oklch(0.58 0.15 280);
+    --person-default: oklch(0.55 0.12 25);
+
+    /* ============================================
+     ACTIVITY COLORS
+     ============================================ */
+    --activity-sport: oklch(0.65 0.16 160);
+    --activity-school: oklch(0.72 0.14 75);
+    --activity-social: oklch(0.65 0.18 340);
+    --activity-appointment: oklch(0.58 0.16 270);
+    --activity-celebration: oklch(0.62 0.18 15);
+    --activity-reminder: oklch(0.6 0.16 300);
+    --activity-errand: oklch(0.55 0.04 50);
+    --activity-health: oklch(0.62 0.14 175);
+    --activity-default: oklch(0.58 0.12 240);
+
+    /* ============================================
+     CALENDAR SPECIFIC
+     ============================================ */
+    --calendar-today-ring: var(--primary);
+    --calendar-weekend: oklch(0.65 0.12 340);
+    --calendar-event-bg: oklch(0 0 0 / 6%);
+
+    /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+    --font-display: "Instrument Serif", Georgia, serif;
+    --font-body: "DM Sans", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+.dark {
+    /* Backgrounds - deep warm charcoal */
+    --background: oklch(0.18 0.015 260);
+    --background-elevated: oklch(0.22 0.015 260);
+    --background-sunken: oklch(0.14 0.015 260);
+
+    /* Foreground */
+    --foreground: oklch(0.92 0.01 85);
+    --foreground-muted: oklch(0.65 0.01 85);
+    --foreground-subtle: oklch(0.45 0.01 260);
+
+    /* Borders */
+    --border: oklch(0.3 0.015 260);
+    --border-strong: oklch(0.38 0.015 260);
+
+    /* Primary accent - softer coral */
+    --primary: oklch(0.72 0.14 25);
+    --primary-foreground: oklch(0.15 0.015 260);
+    --primary-muted: oklch(0.72 0.14 25 / 18%);
+
+    /* Secondary */
+    --secondary: oklch(0.28 0.02 260);
+    --secondary-foreground: oklch(0.85 0.01 85);
+
+    /* Accent */
+    --accent: oklch(0.3 0.04 280);
+    --accent-foreground: oklch(0.8 0.08 280);
+
+    /* Status colors - slightly muted for dark mode */
+    --success: oklch(0.7 0.14 145);
+    --success-muted: oklch(0.7 0.14 145 / 18%);
+    --warning: oklch(0.76 0.13 75);
+    --warning-muted: oklch(0.76 0.13 75 / 18%);
+    --destructive: oklch(0.65 0.18 25);
+    --destructive-muted: oklch(0.65 0.18 25 / 18%);
+
+    /* Interactive */
+    --ring: oklch(0.72 0.14 25 / 50%);
+    --input: oklch(0.25 0.015 260);
+
+    /* Shadows - subtle in dark mode */
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 20%);
+    --shadow-md: 0 4px 6px oklch(0 0 0 / 25%), 0 1px 3px oklch(0 0 0 / 15%);
+    --shadow-lg: 0 10px 15px oklch(0 0 0 / 30%), 0 4px 6px oklch(0 0 0 / 20%);
+
+    /* Card */
+    --card: var(--background-elevated);
+    --card-foreground: var(--foreground);
+
+    /* Popover */
+    --popover: var(--background-elevated);
+    --popover-foreground: var(--foreground);
+
+    /* Muted */
+    --muted: var(--background-sunken);
+    --muted-foreground: var(--foreground-muted);
+
+    /* ============================================
+     SYNTAX HIGHLIGHTING - Dark Mode
+     ============================================ */
+
+    /* Editor chrome */
+    --editor-bg: oklch(0.16 0.015 260);
+    --editor-gutter: oklch(0.14 0.015 260);
+    --editor-line-highlight: oklch(0.72 0.14 25 / 10%);
+    --editor-cursor: oklch(0.85 0.1 25);
+
+    /* Syntax colors - brighter for dark bg */
+    --syntax-text: oklch(0.88 0.01 85);
+    --syntax-comment: oklch(0.5 0.01 260);
+    --syntax-heading-1: oklch(0.78 0.12 25);
+    --syntax-heading-2: oklch(0.75 0.1 280);
+    --syntax-heading-3: oklch(0.72 0.1 200);
+    --syntax-time: oklch(0.8 0.12 75);
+    --syntax-location: oklch(0.75 0.1 200);
+    --syntax-modifier: oklch(0.78 0.1 320);
+    --syntax-recurrence: oklch(0.75 0.12 320);
+    --syntax-field-key: oklch(0.78 0.1 320);
+    --syntax-note: oklch(0.65 0.01 85);
+
+    /* ============================================
+     PEOPLE COLORS - brighter for dark mode
+     ============================================ */
+    --person-marcus: oklch(0.7 0.14 240);
+    --person-ella: oklch(0.72 0.16 340);
+    --person-sarah: oklch(0.72 0.14 145);
+    --person-steven: oklch(0.76 0.14 55);
+    --person-family: oklch(0.7 0.14 280);
+    --person-default: oklch(0.72 0.1 25);
+
+    /* ============================================
+     ACTIVITY COLORS - brighter for dark mode
+     ============================================ */
+    --activity-sport: oklch(0.72 0.14 160);
+    --activity-school: oklch(0.78 0.12 75);
+    --activity-social: oklch(0.72 0.16 340);
+    --activity-appointment: oklch(0.68 0.14 270);
+    --activity-celebration: oklch(0.7 0.16 15);
+    --activity-reminder: oklch(0.7 0.14 300);
+    --activity-errand: oklch(0.62 0.03 85);
+    --activity-health: oklch(0.7 0.12 175);
+    --activity-default: oklch(0.68 0.1 240);
+
+    /* ============================================
+     CALENDAR SPECIFIC - dark mode
+     ============================================ */
+    --calendar-today-ring: var(--primary);
+    --calendar-weekend: oklch(0.72 0.1 340);
+    --calendar-event-bg: oklch(1 0 0 / 8%);
+}
+
+/* ============================================
+   TAILWIND THEME MAPPING
+   ============================================ */
+
+@theme inline {
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: calc(var(--radius) + 8px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    html {
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "ss01", "ss02", "cv01";
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-strong);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--foreground-subtle);
+    }
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
+
+@layer components {
+    /* App header */
+    .app-header {
+        background: var(--background-elevated);
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Navigation buttons */
+    .nav-button {
+        font-family: var(--font-body);
+        font-weight: 500;
+        transition: all 150ms ease;
+    }
+
+    .nav-button:hover {
+        background: var(--secondary);
+    }
+
+    .nav-button[data-active="true"] {
+        background: var(--primary-muted);
+        color: var(--primary);
+    }
+
+    /* Quick add bar */
+    .quick-add-bar {
+        background: var(--background-sunken);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .quick-add-input {
+        font-family: var(--font-mono);
+        background: var(--background-elevated);
+        border: 2px solid var(--border);
+        transition:
+            border-color 150ms ease,
+            box-shadow 150ms ease;
+    }
+
+    .quick-add-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--ring);
+        outline: none;
+    }
+
+    .quick-add-input[data-valid="true"] {
+        border-color: var(--success);
+    }
+
+    /* Editor */
+    .editor-container {
+        background: var(--editor-bg);
+    }
+
+    .editor-gutter {
+        background: var(--editor-gutter);
+        color: var(--foreground-subtle);
+        font-family: var(--font-mono);
+    }
+
+    .editor-textarea {
+        font-family: var(--font-mono);
+        caret-color: var(--editor-cursor);
+    }
+
+    .editor-highlight {
+        font-family: var(--font-mono);
+    }
+
+    .editor-line-active {
+        background: var(--editor-line-highlight);
+    }
+
+    /* Calendar grid */
+    .calendar-day {
+        background: var(--background-elevated);
+        transition: background 150ms ease;
+    }
+
+    .calendar-day:hover {
+        background: var(--secondary);
+    }
+
+    .calendar-day-today {
+        box-shadow: inset 0 0 0 2px var(--calendar-today-ring);
+    }
+
+    .calendar-day-weekend .calendar-day-number {
+        color: var(--calendar-weekend);
+    }
+
+    /* Event pills */
+    .event-pill {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        transition: opacity 150ms ease;
+    }
+
+    .event-pill:hover {
+        opacity: 0.85;
+    }
+
+    /* Status bar */
+    .status-bar {
+        background: var(--background-sunken);
+        border-top: 1px solid var(--border);
+        font-size: 0.6875rem;
+        color: var(--foreground-muted);
+    }
+
+    /* Syntax help sidebar */
+    .syntax-help {
+        background: var(--background-sunken);
+        border-left: 1px solid var(--border);
+        font-size: 0.6875rem;
+    }
+
+    .syntax-help-heading {
+        font-family: var(--font-body);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--foreground-muted);
+    }
+
+    /* Person badge */
+    .person-badge {
+        font-weight: 600;
+        font-size: 0.6875rem;
+    }
+
+    /* Activity badge */
+    .activity-badge {
+        font-weight: 500;
+    }
+
+    /* Avatar */
+    .avatar {
+        font-weight: 700;
+        font-size: 0.6875rem;
+        transition: transform 150ms ease;
+    }
+
+    .avatar:hover {
+        transform: scale(1.1);
+        z-index: 10;
+    }
+
+    /* CodeMirror BronsonEditor */
+    .bronson-editor {
+        background: var(--editor-bg);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bronson-editor .cm-editor {
+        height: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bronson-editor .cm-scroller {
+        font-family: var(--font-mono);
+        overflow: auto !important;
+        flex: 1;
+    }
+
+    .bronson-editor .cm-focused {
+        outline: none;
+    }
+
+    .editor-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    /* Badge base - shared styling for person/activity badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+    }
+
+    .badge-sm {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.625rem;
+    }
+
+    /* Section header - used in detail views */
+    .section-header {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--foreground-muted);
+        margin-bottom: 0.75rem;
+    }
+
+    /* Detail card - rounded container with subtle background */
+    .detail-card {
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background-color: var(--secondary);
+    }
+
+    /* Detail row - used in event/person details */
+    .detail-row {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-row-label {
+        width: 6rem;
+        font-size: 0.75rem;
+        color: var(--foreground-muted);
+        flex-shrink: 0;
+    }
+
+    .detail-row-value {
+        flex: 1;
+        color: var(--foreground);
+    }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+    /* Hide on mobile, show on tablet+ */
+    .hide-mobile {
+        @apply hidden md:block;
+    }
+
+    /* Show on mobile, hide on tablet+ */
+    .show-mobile {
+        @apply block md:hidden;
+    }
+
+    /* Compact padding on mobile */
+    .responsive-padding {
+        @apply p-2 sm:p-3 md:p-4;
+    }
+
+    /* Responsive text */
+    .text-responsive-sm {
+        @apply text-xs sm:text-sm;
+    }
+
+    .text-responsive-base {
+        @apply text-sm sm:text-base;
+    }
+}
+
+/* Mobile navigation - becomes a bottom bar */
+@media (max-width: 767px) {
+    .app-nav-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        padding: 0.5rem;
+        padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+        background: var(--background-elevated);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px oklch(0 0 0 / 5%);
+    }
+
+    .app-main-content {
+        padding-bottom: 4.5rem; /* Space for bottom nav */
+    }
+
+    .mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        gap: 0.25rem;
+    }
+
+    .mobile-nav-button {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 0.25rem;
+        border-radius: var(--radius);
+        font-size: 0.625rem;
+        font-weight: 500;
+        color: var(--foreground-muted);
+        transition: all 150ms ease;
+    }
+
+    .mobile-nav-button[data-active="true"] {
+        color: var(--primary);
+        background: var(--primary-muted);
+    }
+
+    .mobile-nav-icon {
+        font-size: 1.25rem;
+    }
+}
+
+/* Very narrow screens - icons only in bottom nav */
+@media (max-width: 374px) {
+    .mobile-nav-button {
+        padding: 0.625rem 0.125rem;
+    }
+
+    .mobile-nav-button span:not(.mobile-nav-icon) {
+        display: none;
+    }
+
+    .mobile-nav-icon {
+        font-size: 1.375rem;
+    }
+}
+
+/* Tablet - side-by-side views */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .editor-syntax-help {
+        display: none; /* Hide syntax help on tablets to save space */
+    }
+}
+
+/* Desktop - full layout */
+@media (min-width: 1024px) {
+    .calendar-grid-desktop {
+        grid-template-columns: repeat(7, 1fr);
+    }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-success {
+    0%,
+    100% {
+        border-color: var(--success);
+        box-shadow: 0 0 0 0 var(--success-muted);
+    }
+    50% {
+        border-color: var(--success);
+        box-shadow: 0 0 0 4px var(--success-muted);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 200ms ease-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 200ms ease-out;
+}
+
+.animate-success {
+    animation: pulse-success 600ms ease-out;
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Focus visible styles */
+.quick-add-input:focus-visible,
+.nav-button:focus-visible,
+.mobile-nav-button:focus-visible,
+.calendar-day:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Remove default outline since we're using focus-visible */
+.quick-add-input:focus:not(:focus-visible),
+.nav-button:focus:not(:focus-visible),
+.mobile-nav-button:focus:not(:focus-visible),
+.calendar-day:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    .app-header,
+    .quick-add-bar,
+    .status-bar,
+    .syntax-help {
+        display: none;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+}
