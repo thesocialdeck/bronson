@@ -198,6 +198,7 @@ pub struct Person {
     pub id: String,
     pub name: String,
     pub subtitle: Option<String>,
+    pub color: Option<String>,
     pub fields: HashMap<String, String>,
     pub notes: Vec<String>,
     pub log: Vec<LogEntry>,

@@ -16,6 +16,7 @@ import {
 import { calendarExtension } from "./extensions/calendar-language";
 import { peopleExtension } from "./extensions/people-language";
 import { activitiesExtension } from "./extensions/activities-language";
+import type { Person } from "@/lib/types";
 
 export interface BronsonEditorProps {
   value: string;
@@ -24,6 +25,7 @@ export interface BronsonEditorProps {
   personIds: string[];
   activityIds: string[];
   locationIds?: string[];
+  getPerson?: (id: string) => Person | null;
   showLineNumbers?: boolean;
   lineWrapping?: boolean;
   minHeight?: string;
@@ -41,6 +43,7 @@ export function BronsonEditor({
   personIds,
   activityIds,
   locationIds = [],
+  getPerson,
   showLineNumbers = true,
   lineWrapping = false,
   minHeight,
@@ -81,9 +84,14 @@ export function BronsonEditor({
   // Get autocomplete extension
   const getAutocompleteExtension = useCallback(() => {
     if (readonly) return [];
-    const data: AutocompleteData = { personIds, activityIds, locationIds };
+    const data: AutocompleteData = {
+      personIds,
+      activityIds,
+      locationIds,
+      getPerson,
+    };
     return bronsonAutocomplete(data);
-  }, [personIds, activityIds, locationIds, readonly]);
+  }, [personIds, activityIds, locationIds, getPerson, readonly]);
 
   // Build initial extensions
   const getInitialExtensions = useCallback((): Extension[] => {

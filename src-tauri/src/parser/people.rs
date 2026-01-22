@@ -156,6 +156,7 @@ pub fn parse_people(content: &str) -> ParseResult<PeopleData> {
                 id: to_id(&name),
                 name,
                 subtitle: None,
+                color: None,
                 fields: HashMap::new(),
                 notes: Vec::new(),
                 log: Vec::new(),
@@ -213,6 +214,9 @@ pub fn parse_people(content: &str) -> ParseResult<PeopleData> {
                         person.notes.push(value);
                     }
                     collecting_notes = true;
+                } else if key == "color" || key == "colour" {
+                    // Store color in dedicated field, not in fields map
+                    person.color = Some(value);
                 } else if !key.is_empty() {
                     person.fields.insert(key, value);
                 }

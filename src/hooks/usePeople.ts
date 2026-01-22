@@ -83,6 +83,58 @@ export function usePeople() {
     return ids;
   }, [people]);
 
+  // Get family members (people in the "Family" context) with their colors
+  const getFamilyMembers = useCallback((): Array<{
+    id: string;
+    name: string;
+    color: string | null;
+  }> => {
+    if (!people) return [];
+
+    const familyContext = people.contexts.find(
+      (c) => c.id === "family" || c.name.toLowerCase() === "family",
+    );
+    if (!familyContext) return [];
+
+    return familyContext.people.map((person) => ({
+      id: person.id,
+      name: person.name,
+      color: person.color,
+    }));
+  }, [people]);
+
+  // Get a person by ID
+  const getPerson = useCallback(
+    (id: string) => {
+      if (!people) return null;
+
+      for (const context of people.contexts) {
+        for (const person of context.people) {
+          if (person.id === id) return person;
+          // Check members too
+          for (const member of person.members) {
+            if (member.id === id) {
+              // Return a person-like object for members
+              return {
+                id: member.id,
+                name: member.name,
+                subtitle: null,
+                color: null,
+                fields: member.fields,
+                notes: [],
+                log: [],
+                members: [],
+                line_number: 0,
+              };
+            }
+          }
+        }
+      }
+      return null;
+    },
+    [people],
+  );
+
   useEffect(() => {
     loadPeople();
   }, [loadPeople]);
@@ -96,5 +148,7 @@ export function usePeople() {
     readPeopleFile,
     writePeopleFile,
     getAllPersonIds,
+    getFamilyMembers,
+    getPerson,
   };
 }

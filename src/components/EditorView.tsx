@@ -6,6 +6,7 @@ import {
   getActivityColor,
   getActivityIcon,
 } from "@/lib/colors";
+import type { Person } from "@/lib/types";
 
 interface EditorViewProps {
   fileName: string;
@@ -17,6 +18,7 @@ interface EditorViewProps {
   personIds: string[];
   activityIds: string[];
   locationIds?: string[];
+  getPerson?: (id: string) => Person | null;
   syntaxHelp?: React.ReactNode;
 }
 
@@ -30,6 +32,7 @@ export function EditorView({
   personIds,
   activityIds,
   locationIds = [],
+  getPerson,
   syntaxHelp,
 }: EditorViewProps) {
   const [content, setContent] = useState("");
@@ -154,6 +157,7 @@ export function EditorView({
               personIds={personIds}
               activityIds={activityIds}
               locationIds={locationIds}
+              getPerson={getPerson}
               showLineNumbers={true}
               lineWrapping={false}
               scrollToLine={selectedLine ?? undefined}

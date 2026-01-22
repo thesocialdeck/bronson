@@ -112,6 +112,7 @@ export interface Person {
   id: string;
   name: string;
   subtitle: string | null;
+  color: string | null;
   fields: Record<string, string>;
   notes: string[];
   log: LogEntry[];

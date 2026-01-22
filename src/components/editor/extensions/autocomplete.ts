@@ -10,11 +10,13 @@ import {
   getActivityColor,
   getActivityIcon,
 } from "@/lib/colors";
+import type { Person } from "@/lib/types";
 
 export interface AutocompleteData {
   personIds: string[];
   activityIds: string[];
   locationIds: string[];
+  getPerson?: (id: string) => Person | null;
 }
 
 function createCompletions(
@@ -90,15 +92,21 @@ export function bronsonAutocomplete(data: AutocompleteData): Extension {
           span.className = "cm-completion-color-dot";
 
           // Add color indicator for people and activities
-          if (completion.type === "variable" && completion.label.startsWith("#")) {
+          if (
+            completion.type === "variable" &&
+            completion.label.startsWith("#")
+          ) {
             const id = completion.label.slice(1);
-            span.style.backgroundColor = getPersonColor(id);
+            span.style.backgroundColor = getPersonColor(id, data.getPerson);
             span.style.width = "8px";
             span.style.height = "8px";
             span.style.borderRadius = "50%";
             span.style.display = "inline-block";
             span.style.marginRight = "8px";
-          } else if (completion.type === "type" && completion.label.startsWith("+")) {
+          } else if (
+            completion.type === "type" &&
+            completion.label.startsWith("+")
+          ) {
             const id = completion.label.slice(1);
             span.style.backgroundColor = getActivityColor(id);
             span.style.width = "8px";

@@ -6,13 +6,14 @@ import {
   getActivityColor,
   getActivityIcon,
 } from "@/lib/colors";
-import type { Activity } from "@/lib/types";
+import type { Activity, Person } from "@/lib/types";
 
 interface QuickAddProps {
   onAdd: (line: string, month: string, year?: number) => Promise<number | null>;
   personIds: string[];
   activityIds: string[];
   getActivity?: (id: string) => Activity | null;
+  getPerson?: (id: string) => Person | null;
 }
 
 interface AutocompleteItem {
@@ -50,6 +51,7 @@ interface HighlightedToken {
 function tokenizeWithParsedResult(
   input: string,
   parsed: QuickAddResult,
+  getPerson?: (id: string) => Person | null,
 ): HighlightedToken[] {
   if (!input) return [];
 
@@ -199,7 +201,7 @@ function tokenizeWithParsedResult(
     if (part.startsWith("#")) {
       inLocation = false;
       const personId = part.slice(1).toLowerCase();
-      addToken(part, "person", getPersonColor(personId));
+      addToken(part, "person", getPersonColor(personId, getPerson));
     } else if (part.startsWith("+")) {
       inLocation = false;
       const activityId = part.slice(1).toLowerCase();
@@ -226,6 +228,7 @@ export function QuickAdd({
   personIds,
   activityIds,
   getActivity,
+  getPerson,
 }: QuickAddProps) {
   const [value, setValue] = useState("");
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -255,8 +258,8 @@ export function QuickAdd({
 
   // Tokenize input for syntax highlighting using parsed result
   const highlightedTokens = useMemo(
-    () => tokenizeWithParsedResult(value, parsed),
-    [value, parsed],
+    () => tokenizeWithParsedResult(value, parsed, getPerson),
+    [value, parsed, getPerson],
   );
 
   // Sync scroll between input and overlay
@@ -293,7 +296,7 @@ export function QuickAdd({
         .map((id) => ({
           id,
           display: id.charAt(0).toUpperCase() + id.slice(1),
-          color: getPersonColor(id),
+          color: getPersonColor(id, getPerson),
         }));
     }
 
@@ -616,7 +619,7 @@ export function QuickAdd({
           </span>
 
           {parsed.people.map((p) => {
-            const color = getPersonColor(p);
+            const color = getPersonColor(p, getPerson);
             return (
               <span
                 key={p}

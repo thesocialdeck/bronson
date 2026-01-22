@@ -84,6 +84,8 @@ function App() {
     people,
     loading: peopleLoading,
     getAllPersonIds,
+    getFamilyMembers,
+    getPerson,
     readPeopleFile,
     writePeopleFile,
     loadPeople,
@@ -354,7 +356,7 @@ function App() {
         </button>
 
         {/* Family avatars */}
-        <FamilyAvatars />
+        <FamilyAvatars members={getFamilyMembers()} />
       </header>
 
       {/* Header - Mobile */}
@@ -371,7 +373,7 @@ function App() {
           >
             {isDark ? "☀️" : "🌙"}
           </button>
-          <FamilyAvatars compact />
+          <FamilyAvatars compact members={getFamilyMembers()} />
         </div>
       </header>
 
@@ -383,6 +385,7 @@ function App() {
             personIds={personIds}
             activityIds={activityIds}
             getActivity={getActivity}
+            getPerson={getPerson}
           />
         </div>
       )}
@@ -482,6 +485,7 @@ function App() {
                     personIds={personIds}
                     activityIds={activityIds}
                     getActivity={getActivity}
+                    getPerson={getPerson}
                     onEventSelect={handleEventSelect}
                     selectedEventId={selectedEvent?.id}
                   />
@@ -517,6 +521,7 @@ function App() {
                 onSaveSource={handleSaveEventSource}
                 personIds={personIds}
                 activityIds={activityIds}
+                getPerson={getPerson}
               />
             </div>
           </div>
@@ -532,6 +537,7 @@ function App() {
                 language="calendar"
                 personIds={personIds}
                 activityIds={activityIds}
+                getPerson={getPerson}
                 syntaxHelp={<CalendarSyntaxHelp />}
               />
             )}
@@ -544,6 +550,7 @@ function App() {
                 language="people"
                 personIds={personIds}
                 activityIds={activityIds}
+                getPerson={getPerson}
                 syntaxHelp={<PeopleSyntaxHelp />}
               />
             )}
@@ -556,6 +563,7 @@ function App() {
                 language="activities"
                 personIds={personIds}
                 activityIds={activityIds}
+                getPerson={getPerson}
                 syntaxHelp={<ActivitiesSyntaxHelp />}
               />
             )}
@@ -591,6 +599,7 @@ function App() {
                   personIds={personIds}
                   activityIds={activityIds}
                   getActivity={getActivity}
+                  getPerson={getPerson}
                   onEventSelect={handleEventSelect}
                 />
               </div>
@@ -703,25 +712,38 @@ function NavButton({
   );
 }
 
-function FamilyAvatars({ compact = false }: { compact?: boolean }) {
-  const avatars = [
-    { id: "marcus", name: "Marcus", color: "var(--person-marcus)" },
-    { id: "ella", name: "Ella", color: "var(--person-ella)" },
-    { id: "sarah", name: "Sarah", color: "var(--person-sarah)" },
-    { id: "steven", name: "Steven", color: "var(--person-steven)" },
-  ];
+// Default colors for family avatars when no color is set
+const DEFAULT_AVATAR_COLORS = [
+  "#c9a87c", // warm gold
+  "#8fbc8f", // sage green
+  "#b08968", // terracotta
+  "#7eb8da", // soft blue
+  "#d4a5a5", // dusty rose
+  "#9b8bb4", // muted purple
+];
 
+function FamilyAvatars({
+  compact = false,
+  members,
+}: {
+  compact?: boolean;
+  members: Array<{ id: string; name: string; color: string | null }>;
+}) {
   const size = compact ? "w-6 h-6 text-[10px]" : "w-7 h-7 text-[11px]";
+
+  if (members.length === 0) return null;
 
   return (
     <div className="flex -space-x-1.5">
-      {avatars.map((p) => (
+      {members.map((p, index) => (
         <div
           key={p.id}
           title={p.name}
           className={`avatar ${size} rounded-full flex items-center justify-center cursor-pointer ring-2 ring-background`}
           style={{
-            backgroundColor: p.color,
+            backgroundColor:
+              p.color ||
+              DEFAULT_AVATAR_COLORS[index % DEFAULT_AVATAR_COLORS.length],
             color: "var(--background)",
           }}
         >

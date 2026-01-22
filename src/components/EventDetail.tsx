@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InlineEditor } from "@/components/editor";
-import type { Event, Activity, ChecklistItem } from "@/lib/types";
+import type { Event, Activity, ChecklistItem, Person } from "@/lib/types";
 import {
   getPersonColor,
   getActivityColor,
@@ -17,6 +17,7 @@ interface EventDetailProps {
   onSaveSource?: (lineNumber: number, newContent: string) => Promise<boolean>;
   personIds: string[];
   activityIds: string[];
+  getPerson?: (id: string) => Person | null;
   onChecklistChange?: (itemIndex: number, checked: boolean) => void;
 }
 
@@ -28,6 +29,7 @@ export function EventDetail({
   onSaveSource,
   personIds,
   activityIds,
+  getPerson,
 }: EventDetailProps) {
   // Local checklist state (would persist to file in real implementation)
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
@@ -171,7 +173,7 @@ export function EventDetail({
           {event.people.length > 0 && (
             <div className="flex gap-1.5 flex-wrap">
               {event.people.map((p) => {
-                const color = getPersonColor(p);
+                const color = getPersonColor(p, getPerson);
                 return (
                   <span
                     key={p}

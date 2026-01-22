@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import type { Calendar, Event, Activity } from "@/lib/types";
+import type { Calendar, Event, Activity, Person } from "@/lib/types";
 import { getMonthName, expandRecurringEvents } from "@/lib/parser";
 import {
   getPersonColor,
@@ -17,6 +17,7 @@ interface AgendaViewProps {
   personIds: string[];
   activityIds: string[];
   getActivity: (id: string) => Activity | null;
+  getPerson?: (id: string) => Person | null;
   onEventSelect?: (event: Event) => void;
   selectedEventId?: string;
 }
@@ -52,6 +53,7 @@ export function AgendaView({
   personIds,
   activityIds,
   getActivity,
+  getPerson,
   onEventSelect,
   selectedEventId,
 }: AgendaViewProps) {
@@ -89,7 +91,7 @@ export function AgendaView({
           (p): PersonSuggestion => ({
             id: p,
             display: p.charAt(0).toUpperCase() + p.slice(1),
-            color: getPersonColor(p),
+            color: getPersonColor(p, getPerson),
           }),
         );
     } else if (autocompleteType === "activity") {
@@ -261,7 +263,7 @@ export function AgendaView({
       result.parts.push({
         type: "person",
         value: personId.charAt(0).toUpperCase() + personId.slice(1),
-        color: getPersonColor(personId),
+        color: getPersonColor(personId, getPerson),
       });
     }
     text = text.replace(/#\w+/g, "").trim();
@@ -999,7 +1001,7 @@ export function AgendaView({
                       </div>
                       <div className="flex gap-1 flex-wrap items-start">
                         {evt.people.map((p) => {
-                          const pColor = getPersonColor(p);
+                          const pColor = getPersonColor(p, getPerson);
                           return (
                             <Badge
                               key={p}
