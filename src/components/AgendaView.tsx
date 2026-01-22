@@ -40,13 +40,20 @@ interface ParsedFilter {
   description: string;
 }
 
-const EXAMPLE_QUERIES = [
-  "What's #steven got next week",
-  "birthdays this month",
-  "#ella +sport",
-  "#marcus appointments",
-  "[tentative] this month",
-];
+// Generate example queries based on actual person IDs
+function getExampleQueries(personIds: string[]): string[] {
+  const person1 = personIds[0] || "family";
+  const person2 = personIds[1] || personIds[0] || "family";
+  const person3 = personIds[2] || personIds[0] || "family";
+
+  return [
+    `What's #${person1} got next week`,
+    "birthdays this month",
+    `#${person2} +sport`,
+    `#${person3} appointments`,
+    "[tentative] this month",
+  ];
+}
 
 export function AgendaView({
   calendar,
@@ -64,6 +71,19 @@ export function AgendaView({
   >(null);
   const [autocompleteQuery, setAutocompleteQuery] = useState("");
   const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] = useState(0);
+
+  // Generate example queries based on actual person IDs
+  const exampleQueries = useMemo(
+    () => getExampleQueries(personIds),
+    [personIds],
+  );
+
+  // Generate placeholder text based on actual person IDs
+  const filterPlaceholder = useMemo(() => {
+    const person1 = personIds[0] || "family";
+    const person2 = personIds[1] || personIds[0] || "family";
+    return `Ask: What's #${person1} got next week? / birthdays next month / #${person2} +sport`;
+  }, [personIds]);
 
   // Autocomplete suggestion types
   type PersonSuggestion = { id: string; display: string; color: string };
@@ -627,7 +647,7 @@ export function AgendaView({
             onChange={handleFilterChange}
             onKeyDown={handleKeyDown}
             onBlur={() => setTimeout(() => setShowAutocomplete(false), 150)}
-            placeholder="Ask: What's #steven got next week? / birthdays next month / #ella +sport"
+            placeholder={filterPlaceholder}
             className="quick-add-input w-full px-4 py-3 pl-10 rounded-xl text-sm"
             style={{
               borderColor: parsedFilter ? "var(--primary)" : "var(--border)",
@@ -757,7 +777,7 @@ export function AgendaView({
         {/* Example queries - horizontal scroll on mobile, wrap on desktop */}
         {!filter && (
           <div className="mt-3 flex gap-1.5 overflow-x-auto pb-2 -mx-3 px-3 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible">
-            {EXAMPLE_QUERIES.map((q, idx) => (
+            {exampleQueries.map((q, idx) => (
               <button
                 key={idx}
                 onClick={() => setFilter(q)}

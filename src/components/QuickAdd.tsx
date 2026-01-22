@@ -23,15 +23,21 @@ interface AutocompleteItem {
   icon?: string;
 }
 
-// Example inputs to show users the possibilities
-const EXAMPLE_INPUTS = [
-  "tomorrow 2pm Soccer practice #marcus +sport",
-  "next saturday BBQ with neighbours #family +social @home",
-  "fri 9am Dentist #ella +appointment @Dr Smith",
-  "in 3 days Pick up dry cleaning +errand",
-  "jan 15 School carnival #family +school",
-  "apr 4 - 30 Holiday to Vietnam #family",
-];
+// Generate example inputs based on actual person IDs
+function getExampleInputs(personIds: string[]): string[] {
+  // Get first two people, or use "family" as fallback
+  const person1 = personIds[0] || "family";
+  const person2 = personIds[1] || personIds[0] || "family";
+
+  return [
+    `tomorrow 2pm Soccer practice #${person1} +sport`,
+    "next saturday BBQ with neighbours #family +social @home",
+    `fri 9am Dentist #${person2} +appointment @Dr Smith`,
+    "in 3 days Pick up dry cleaning +errand",
+    "jan 15 School carnival #family +school",
+    "apr 4 - 30 Holiday to Vietnam #family",
+  ];
+}
 
 interface HighlightedToken {
   text: string;
@@ -238,21 +244,32 @@ export function QuickAdd({
   const [autocompleteQuery, setAutocompleteQuery] = useState("");
   const [autocompleteIndex, setAutocompleteIndex] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
-  const [placeholder, setPlaceholder] = useState(EXAMPLE_INPUTS[0]);
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const { addToast } = useToast();
 
+  // Generate examples based on actual person IDs
+  const exampleInputs = useMemo(() => getExampleInputs(personIds), [personIds]);
+  const [placeholder, setPlaceholder] = useState("");
+
+  // Initialize placeholder once examples are ready
+  useEffect(() => {
+    if (exampleInputs.length > 0 && !placeholder) {
+      setPlaceholder(exampleInputs[0]);
+    }
+  }, [exampleInputs, placeholder]);
+
   // Rotate placeholder examples
   useEffect(() => {
+    if (exampleInputs.length === 0) return;
     const interval = setInterval(() => {
       setPlaceholder((prev) => {
-        const currentIndex = EXAMPLE_INPUTS.indexOf(prev);
-        return EXAMPLE_INPUTS[(currentIndex + 1) % EXAMPLE_INPUTS.length];
+        const currentIndex = exampleInputs.indexOf(prev);
+        return exampleInputs[(currentIndex + 1) % exampleInputs.length];
       });
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [exampleInputs]);
 
   const parsed = parseQuickAdd(value);
 

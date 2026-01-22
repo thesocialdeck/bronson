@@ -178,18 +178,21 @@ export function EditorView({
 }
 
 // Syntax help components - kept for backward compatibility and sidebar display
-export function CalendarSyntaxHelp() {
-  const people = ["marcus", "ella", "sarah", "steven", "family"];
-  const activities = [
-    "sport",
-    "school",
-    "social",
-    "appointment",
-    "celebration",
-    "reminder",
-    "errand",
-    "health",
-  ];
+export function CalendarSyntaxHelp({
+  personIds = [],
+  activityIds = [],
+  getPerson,
+}: {
+  personIds?: string[];
+  activityIds?: string[];
+  getPerson?: (id: string) => Person | null;
+}) {
+  // Use provided IDs or fall back to defaults for display purposes
+  const people = personIds.length > 0 ? personIds.slice(0, 6) : ["family"];
+  const activities =
+    activityIds.length > 0
+      ? activityIds.slice(0, 8)
+      : ["sport", "school", "social", "appointment"];
 
   return (
     <>
@@ -206,12 +209,12 @@ export function CalendarSyntaxHelp() {
           <div key={id} className="flex items-center gap-1.5 mb-0.5">
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: getPersonColor(id) }}
+              style={{ backgroundColor: getPersonColor(id, getPerson) }}
             />
             <span
               className="text-[11px]"
               style={{
-                color: getPersonColor(id),
+                color: getPersonColor(id, getPerson),
                 fontFamily: "var(--font-mono)",
               }}
             >

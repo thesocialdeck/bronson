@@ -538,7 +538,13 @@ function App() {
                 personIds={personIds}
                 activityIds={activityIds}
                 getPerson={getPerson}
-                syntaxHelp={<CalendarSyntaxHelp />}
+                syntaxHelp={
+                  <CalendarSyntaxHelp
+                    personIds={personIds}
+                    activityIds={activityIds}
+                    getPerson={getPerson}
+                  />
+                }
               />
             )}
 
