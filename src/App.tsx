@@ -132,9 +132,22 @@ function App() {
 
       lines[lineNumber - 1] = newContent;
       const success = await writeCalendarFile(lines.join("\n"));
+
+      // Update selectedEvent with the new raw_line so the UI reflects the change
+      if (
+        success &&
+        selectedEvent &&
+        selectedEvent.line_number === lineNumber
+      ) {
+        setSelectedEvent({
+          ...selectedEvent,
+          raw_line: newContent,
+        });
+      }
+
       return success;
     },
-    [readCalendarFile, writeCalendarFile],
+    [readCalendarFile, writeCalendarFile, selectedEvent],
   );
 
   // Update a person's block in the people file

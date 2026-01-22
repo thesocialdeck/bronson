@@ -162,6 +162,11 @@ pub fn parse_date(input: &str, year: i32) -> IResult<&str, DateSpec> {
 }
 
 pub fn parse_date_range(input: &str, year: i32) -> IResult<&str, DateSpec> {
+    // First, try to parse "3-17 Apr" format (day range followed by month)
+    if let Ok((remaining, date_spec)) = parse_day_range_with_trailing_month(input, year) {
+        return Ok((remaining, date_spec));
+    }
+
     let (remaining, start) = parse_date(input, year)?;
 
     // Try to parse a range suffix like "-17", "- 17", " - jan 20", etc.
@@ -201,6 +206,46 @@ pub fn parse_date_range(input: &str, year: i32) -> IResult<&str, DateSpec> {
     }
 
     Ok((remaining, start))
+}
+
+/// Parse "3-17 Apr" format: day range followed by month name
+fn parse_day_range_with_trailing_month(input: &str, year: i32) -> IResult<&str, DateSpec> {
+    // Parse start day
+    let (remaining, start_day) = parse_u32(input)?;
+
+    // Skip optional whitespace before hyphen
+    let remaining = remaining.trim_start();
+
+    // Require hyphen
+    let (remaining, _) = char::<&str, nom::error::Error<&str>>('-')(remaining)?;
+
+    // Skip optional whitespace after hyphen
+    let remaining = remaining.trim_start();
+
+    // Parse end day
+    let (remaining, end_day) = parse_u32(remaining)?;
+
+    // Require whitespace before month
+    let (remaining, _) = space1(remaining)?;
+
+    // Parse month name
+    let (remaining, month) = month_name(remaining)?;
+
+    // Build the dates
+    let start_date = NaiveDate::from_ymd_opt(year, month, start_day).ok_or_else(|| {
+        nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Verify))
+    })?;
+    let end_date = NaiveDate::from_ymd_opt(year, month, end_day).ok_or_else(|| {
+        nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Verify))
+    })?;
+
+    Ok((
+        remaining,
+        DateSpec::Range {
+            start: start_date,
+            end: end_date,
+        },
+    ))
 }
 
 pub fn parse_month_header(input: &str) -> Option<String> {
@@ -293,6 +338,33 @@ mod tests {
             DateSpec::Range { start, end } => {
                 assert_eq!(start, NaiveDate::from_ymd_opt(2026, 4, 4).unwrap());
                 assert_eq!(end, NaiveDate::from_ymd_opt(2026, 5, 10).unwrap());
+            }
+            _ => panic!("Expected range"),
+        }
+    }
+
+    #[test]
+    fn test_date_range_day_first_with_trailing_month() {
+        // Test "3-17 Apr" format (day range followed by month)
+        let (remaining, date) = parse_date_range("3-17 Apr: Autumn school holidays", 2026).unwrap();
+        assert_eq!(remaining, ": Autumn school holidays");
+        match date {
+            DateSpec::Range { start, end } => {
+                assert_eq!(start, NaiveDate::from_ymd_opt(2026, 4, 3).unwrap());
+                assert_eq!(end, NaiveDate::from_ymd_opt(2026, 4, 17).unwrap());
+            }
+            _ => panic!("Expected range"),
+        }
+    }
+
+    #[test]
+    fn test_date_range_day_first_with_spaces() {
+        // Test "3 - 17 Apr" format with spaces around hyphen
+        let (_, date) = parse_date_range("3 - 17 Apr", 2026).unwrap();
+        match date {
+            DateSpec::Range { start, end } => {
+                assert_eq!(start, NaiveDate::from_ymd_opt(2026, 4, 3).unwrap());
+                assert_eq!(end, NaiveDate::from_ymd_opt(2026, 4, 17).unwrap());
             }
             _ => panic!("Expected range"),
         }

@@ -86,13 +86,13 @@ export function EventDetail({
     return null;
   };
 
-  // Get activity color and icon
-  const activityColor = event.activity
-    ? getActivityColor(event.activity)
-    : activity?.color || "var(--activity-default)";
-  const activityIcon = event.activity
-    ? getActivityIcon(event.activity)
-    : activity?.icon || "📅";
+  // Get activity color and icon - prioritize parsed activity data
+  const activityColor =
+    activity?.color ||
+    getActivityColor(event.activity || "") ||
+    "var(--activity-default)";
+  const activityIcon =
+    activity?.icon || getActivityIcon(event.activity || "") || "📅";
 
   // Get checklist from activity
   const checklist = activity?.checklist || [];

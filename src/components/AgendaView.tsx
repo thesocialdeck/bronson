@@ -842,12 +842,14 @@ export function AgendaView({
                   const activity = evt.activity
                     ? getActivity(evt.activity)
                     : null;
-                  const color = evt.activity
-                    ? getActivityColor(evt.activity)
-                    : activity?.color || "var(--activity-default)";
-                  const icon = evt.activity
-                    ? getActivityIcon(evt.activity)
-                    : activity?.icon || "📅";
+                  const color =
+                    activity?.color ||
+                    getActivityColor(evt.activity || "") ||
+                    "var(--activity-default)";
+                  const icon =
+                    activity?.icon ||
+                    getActivityIcon(evt.activity || "") ||
+                    "📅";
 
                   const timeStr = evt.time
                     ? evt.time.type === "Point"

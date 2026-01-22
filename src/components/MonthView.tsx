@@ -166,9 +166,11 @@ export function MonthView({
     [events],
   );
 
-  // Group single-day events by day
+  // Group all events by day (single-day events + multi-day events expanded to each day)
   const eventsByDay = useMemo(() => {
     const map = new Map<number, Event[]>();
+
+    // Add single-day events
     for (const event of singleDayEvents) {
       if (event.date.type === "Single") {
         const date = new Date(event.date.value);
@@ -181,8 +183,23 @@ export function MonthView({
         }
       }
     }
+
+    // Add multi-day events to each day they span within this month
+    for (const event of multiDayEvents) {
+      const daysInMonth = getEventDaysInMonth(event, year, selectedMonth);
+      for (const day of daysInMonth) {
+        if (!map.has(day)) {
+          map.set(day, []);
+        }
+        // Avoid duplicates
+        if (!map.get(day)!.some((e) => e.id === event.id)) {
+          map.get(day)!.push(event);
+        }
+      }
+    }
+
     return map;
-  }, [singleDayEvents, selectedMonth]);
+  }, [singleDayEvents, multiDayEvents, selectedMonth, year]);
 
   const today = new Date();
   const isCurrentMonth =
@@ -306,12 +323,14 @@ export function MonthView({
                         const activity = spanning.event.activity
                           ? getActivity(spanning.event.activity)
                           : null;
-                        const color = spanning.event.activity
-                          ? getActivityColor(spanning.event.activity)
-                          : activity?.color || "var(--activity-default)";
-                        const icon = spanning.event.activity
-                          ? getActivityIcon(spanning.event.activity)
-                          : activity?.icon || "";
+                        const color =
+                          activity?.color ||
+                          getActivityColor(spanning.event.activity || "") ||
+                          "var(--activity-default)";
+                        const icon =
+                          activity?.icon ||
+                          getActivityIcon(spanning.event.activity || "") ||
+                          "";
 
                         const isSelected =
                           selectedEventId === spanning.event.id;
@@ -427,17 +446,22 @@ export function MonthView({
                       {/* Mobile: colored dots */}
                       {dayEvents.length > 0 && (
                         <div className="flex gap-0.5 flex-wrap md:hidden mt-auto">
-                          {dayEvents.slice(0, 4).map((event, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{
-                                backgroundColor: event.activity
-                                  ? getActivityColor(event.activity)
-                                  : "var(--activity-default)",
-                              }}
-                            />
-                          ))}
+                          {dayEvents.slice(0, 4).map((event, i) => {
+                            const activity = event.activity
+                              ? getActivity(event.activity)
+                              : null;
+                            const dotColor =
+                              activity?.color ||
+                              getActivityColor(event.activity || "") ||
+                              "var(--activity-default)";
+                            return (
+                              <div
+                                key={i}
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ backgroundColor: dotColor }}
+                              />
+                            );
+                          })}
                           {dayEvents.length > 4 && (
                             <span
                               className="text-[8px] leading-none"
@@ -497,12 +521,11 @@ function EventPill({
   isSelected,
 }: EventPillProps) {
   const activity = event.activity ? getActivity(event.activity) : null;
-  const color = event.activity
-    ? getActivityColor(event.activity)
-    : activity?.color || "var(--activity-default)";
-  const icon = event.activity
-    ? getActivityIcon(event.activity)
-    : activity?.icon || "";
+  const color =
+    activity?.color ||
+    getActivityColor(event.activity || "") ||
+    "var(--activity-default)";
+  const icon = activity?.icon || getActivityIcon(event.activity || "") || "";
 
   const timeStr = event.time
     ? event.time.type === "Point"
