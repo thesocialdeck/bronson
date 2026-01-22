@@ -543,6 +543,7 @@ function App() {
                     personIds={personIds}
                     activityIds={activityIds}
                     getPerson={getPerson}
+                    getActivity={getActivity}
                   />
                 }
               />

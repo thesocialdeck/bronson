@@ -6,7 +6,7 @@ import {
   getActivityColor,
   getActivityIcon,
 } from "@/lib/colors";
-import type { Person } from "@/lib/types";
+import type { Person, Activity } from "@/lib/types";
 
 interface EditorViewProps {
   fileName: string;
@@ -182,10 +182,12 @@ export function CalendarSyntaxHelp({
   personIds = [],
   activityIds = [],
   getPerson,
+  getActivity,
 }: {
   personIds?: string[];
   activityIds?: string[];
   getPerson?: (id: string) => Person | null;
+  getActivity?: (id: string) => Activity | null;
 }) {
   // Use provided IDs or fall back to defaults for display purposes
   const people = personIds.length > 0 ? personIds.slice(0, 6) : ["family"];
@@ -231,20 +233,25 @@ export function CalendarSyntaxHelp({
         >
           Activities
         </div>
-        {activities.map((id) => (
-          <div key={id} className="flex items-center gap-1.5 mb-0.5">
-            <span className="text-xs">{getActivityIcon(id)}</span>
-            <span
-              className="text-[11px]"
-              style={{
-                color: getActivityColor(id),
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              +{id}
-            </span>
-          </div>
-        ))}
+        {activities.map((id) => {
+          const activity = getActivity?.(id);
+          const icon = activity?.icon || getActivityIcon(id);
+          const color = activity?.color || getActivityColor(id);
+          return (
+            <div key={id} className="flex items-center gap-1.5 mb-0.5">
+              <span className="text-xs">{icon}</span>
+              <span
+                className="text-[11px]"
+                style={{
+                  color: color,
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                +{id}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="mb-4">
