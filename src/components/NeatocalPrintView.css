@@ -1,0 +1,407 @@
+/* Neatocal Print View Styles */
+
+.neatocal-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background: white;
+    color: #222;
+    font-family:
+        "Oswald",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+/* Controls bar */
+.neatocal-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid #ddd;
+    background: #fafafa;
+    flex-wrap: wrap;
+}
+
+.neatocal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+}
+
+.neatocal-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+}
+
+.neatocal-btn.primary {
+    background: #2563eb;
+    color: white;
+}
+
+.neatocal-btn.primary:hover {
+    background: #1d4ed8;
+}
+
+.neatocal-btn.secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.neatocal-btn.secondary:hover {
+    background: #d1d5db;
+}
+
+/* View selector */
+.view-selector {
+    display: flex;
+    gap: 0.25rem;
+    background: #e5e7eb;
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.view-btn {
+    padding: 0.4rem 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.view-btn:hover {
+    color: #374151;
+}
+
+.view-btn.active {
+    background: white;
+    color: #1f2937;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Month navigation */
+.month-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-btn {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: #e5e7eb;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: #d1d5db;
+}
+
+.nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.nav-label {
+    font-weight: 600;
+    color: #374151;
+    min-width: 120px;
+    text-align: center;
+}
+
+/* Calendar wrapper */
+.neatocal-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 1rem;
+}
+
+/* Calendar table */
+.neatocal-table {
+    width: 100%;
+    height: calc(100% - 2rem);
+    border-collapse: separate;
+    border-spacing: 0.25em 0;
+    table-layout: fixed;
+}
+
+/* Month header row */
+.month-header {
+    background: #f3f4f6;
+}
+
+.month-cell {
+    padding: 0.5rem 0.25rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #374151;
+    border-bottom: 2px solid #d1d5db;
+}
+
+/* Day cells */
+.neatocal-cell {
+    padding: 0.15rem 0.2rem;
+    vertical-align: top;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.7rem;
+    height: 2.2em;
+    overflow: hidden;
+}
+
+.neatocal-cell.weekend {
+    background: #f9fafb;
+}
+
+.neatocal-cell.empty {
+    background: transparent;
+    border-bottom-color: transparent;
+}
+
+.cell-content {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25em;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.neatocal-cell .date {
+    display: inline-block;
+    width: 1.4em;
+    font-weight: 500;
+    color: #374151;
+    flex-shrink: 0;
+}
+
+.neatocal-cell .day {
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.65rem;
+    flex-shrink: 0;
+}
+
+.events-container {
+    display: flex;
+    gap: 0.2em;
+    overflow: hidden;
+    flex: 1;
+}
+
+.neatocal-cell .event {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 0 0.25em;
+    border-radius: 2px;
+    font-size: 0.6rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+.neatocal-cell .event.recurring {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.neatocal-cell .event.birthday {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.neatocal-cell .event-overflow {
+    color: #6b7280;
+    font-size: 0.55rem;
+    flex-shrink: 0;
+}
+
+/* Footer */
+.neatocal-footer {
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid #ddd;
+    background: #fafafa;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+.neatocal-footer strong {
+    color: #374151;
+}
+
+/* View-specific styles */
+
+/* Quarter view (3 months) */
+.view-quarter .neatocal-cell {
+    height: 2.4em;
+    font-size: 0.75rem;
+}
+
+.view-quarter .neatocal-cell .event {
+    font-size: 0.65rem;
+}
+
+.view-quarter .month-cell {
+    font-size: 1rem;
+}
+
+/* Month view (1 month) */
+.view-month .neatocal-cell {
+    height: 3em;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.3rem;
+}
+
+.view-month .cell-content {
+    flex-wrap: wrap;
+    white-space: normal;
+    align-items: flex-start;
+}
+
+.view-month .neatocal-cell .date {
+    font-size: 1rem;
+    width: 1.8em;
+}
+
+.view-month .neatocal-cell .day {
+    font-size: 0.75rem;
+    width: 1.5em;
+}
+
+.view-month .events-container {
+    flex-wrap: wrap;
+}
+
+.view-month .neatocal-cell .event {
+    font-size: 0.7rem;
+    padding: 0.1em 0.3em;
+}
+
+.view-month .month-cell {
+    font-size: 1.2rem;
+    padding: 0.75rem;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .neatocal-container {
+        position: static;
+        height: auto;
+        width: auto;
+        background: white;
+    }
+
+    .neatocal-wrapper {
+        padding: 0;
+        overflow: visible;
+    }
+
+    .neatocal-table {
+        height: auto;
+        page-break-inside: avoid;
+    }
+
+    /* Force colors to print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    .neatocal-cell.weekend {
+        background: #f3f4f6 !important;
+    }
+
+    .neatocal-cell .event {
+        background: #dbeafe !important;
+        color: #1e40af !important;
+    }
+
+    .neatocal-cell .event.recurring {
+        background: #f3e8ff !important;
+        color: #7c3aed !important;
+    }
+
+    .neatocal-cell .event.birthday {
+        background: #fce7f3 !important;
+        color: #db2777 !important;
+    }
+
+    @page {
+        margin: 0.5cm;
+    }
+
+    /* Year/Half view - landscape */
+    .view-year,
+    .view-half {
+        @page {
+            size: landscape;
+        }
+    }
+
+    /* Quarter/Month view - portrait works better */
+    .view-quarter,
+    .view-month {
+        @page {
+            size: portrait;
+        }
+    }
+}
+
+/* Responsive adjustments for smaller screens (pre-print preview) */
+@media screen and (max-width: 1200px) {
+    .neatocal-cell {
+        font-size: 0.6rem;
+    }
+
+    .neatocal-cell .event {
+        font-size: 0.5rem;
+    }
+
+    .month-cell {
+        font-size: 0.75rem;
+    }
+
+    .neatocal-controls {
+        padding: 0.5rem 1rem;
+    }
+
+    .view-selector {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+}

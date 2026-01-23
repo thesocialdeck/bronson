@@ -17,6 +17,7 @@ import { AgendaView } from "@/components/AgendaView";
 import { PeopleView } from "@/components/PeopleView";
 import { ActivitiesView } from "@/components/ActivitiesView";
 import { EventDetail } from "@/components/EventDetail";
+import { NeatocalPrintView } from "@/components/NeatocalPrintView";
 import { ToastProvider } from "@/components/Toast";
 import type { Event } from "@/lib/types";
 import "./App.css";
@@ -57,6 +58,7 @@ function App() {
     }
     return false;
   });
+  const [showPrintView, setShowPrintView] = useState(false);
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -86,6 +88,7 @@ function App() {
     getAllPersonIds,
     getFamilyMembers,
     getPerson,
+    getBirthdays,
     readPeopleFile,
     writePeopleFile,
     loadPeople,
@@ -150,6 +153,16 @@ function App() {
     [readCalendarFile, writeCalendarFile, selectedEvent],
   );
 
+  // Helper to match Rust's to_id function for person/context IDs
+  const toId = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .split("-")
+      .filter((s) => s.length > 0)
+      .join("-");
+  };
+
   // Update a person's block in the people file
   const handleSavePersonSource = useCallback(
     async (personId: string, newContent: string): Promise<boolean> => {
@@ -172,11 +185,8 @@ function App() {
           const nameMatch = line.match(/^### ([^—]+)/);
           if (nameMatch) {
             const name = nameMatch[1].trim();
-            const derivedId = name.toLowerCase().replace(/[^a-z0-9]/g, "-");
-            if (
-              derivedId === personId ||
-              name.toLowerCase().replace(/\s+/g, "-") === personId
-            ) {
+            const derivedId = toId(name);
+            if (derivedId === personId) {
               blockStart = i;
               // Find the end of this block
               for (let j = i + 1; j < lines.length; j++) {
@@ -294,6 +304,18 @@ function App() {
     );
   }
 
+  // Show print view if active
+  if (showPrintView) {
+    return (
+      <NeatocalPrintView
+        calendar={calendar}
+        getActivity={getActivity}
+        birthdays={getBirthdays()}
+        onClose={() => setShowPrintView(false)}
+      />
+    );
+  }
+
   const personIds = getAllPersonIds();
   const activityIds = getAllActivityIds();
 
@@ -357,6 +379,16 @@ function App() {
         </nav>
 
         <div className="flex-1" />
+
+        {/* Print button */}
+        <button
+          onClick={() => setShowPrintView(true)}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          title="Print yearly calendar"
+          aria-label="Print yearly calendar"
+        >
+          🖨️
+        </button>
 
         {/* Theme toggle */}
         <button
@@ -486,6 +518,8 @@ function App() {
                     selectedMonth={selectedMonth}
                     onChangeMonth={setSelectedMonth}
                     getActivity={getActivity}
+                    getPerson={getPerson}
+                    birthdays={getBirthdays()}
                     onEventSelect={handleEventSelect}
                     selectedEventId={selectedEvent?.id}
                   />
@@ -499,6 +533,7 @@ function App() {
                     activityIds={activityIds}
                     getActivity={getActivity}
                     getPerson={getPerson}
+                    birthdays={getBirthdays()}
                     onEventSelect={handleEventSelect}
                     selectedEventId={selectedEvent?.id}
                   />
@@ -607,6 +642,8 @@ function App() {
                   selectedMonth={selectedMonth}
                   onChangeMonth={setSelectedMonth}
                   getActivity={getActivity}
+                  getPerson={getPerson}
+                  birthdays={getBirthdays()}
                   onEventSelect={handleEventSelect}
                 />
               </div>
@@ -620,6 +657,7 @@ function App() {
                   activityIds={activityIds}
                   getActivity={getActivity}
                   getPerson={getPerson}
+                  birthdays={getBirthdays()}
                   onEventSelect={handleEventSelect}
                 />
               </div>

@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import type { Calendar, Event, Activity, Person } from "@/lib/types";
-import { getMonthName, expandRecurringEvents } from "@/lib/parser";
+import type { BirthdayEvent } from "@/hooks/usePeople";
+import {
+  getMonthName,
+  expandRecurringEvents,
+  parseQuickAdd,
+} from "@/lib/parser";
 import {
   getPersonColor,
   getActivityColor,
@@ -18,6 +23,7 @@ interface AgendaViewProps {
   activityIds: string[];
   getActivity: (id: string) => Activity | null;
   getPerson?: (id: string) => Person | null;
+  birthdays?: BirthdayEvent[];
   onEventSelect?: (event: Event) => void;
   selectedEventId?: string;
 }
@@ -61,6 +67,7 @@ export function AgendaView({
   activityIds,
   getActivity,
   getPerson,
+  birthdays = [],
   onEventSelect,
   selectedEventId,
 }: AgendaViewProps) {
@@ -355,6 +362,95 @@ export function AgendaView({
       text = text.replace(/\b(upcoming|coming up)\b/i, "").trim();
     }
 
+    // Parse month names and specific dates if no date range found yet
+    if (!result.dateRange) {
+      const monthNames: Record<string, number> = {
+        january: 0,
+        jan: 0,
+        february: 1,
+        feb: 1,
+        march: 2,
+        mar: 2,
+        april: 3,
+        apr: 3,
+        may: 4,
+        june: 5,
+        jun: 5,
+        july: 6,
+        jul: 6,
+        august: 7,
+        aug: 7,
+        september: 8,
+        sep: 8,
+        sept: 8,
+        october: 9,
+        oct: 9,
+        november: 10,
+        nov: 10,
+        december: 11,
+        dec: 11,
+      };
+
+      // Try to match "10 august", "10th august", "august 10", "august 10th"
+      const dayMonthMatch = text.match(
+        /\b(\d{1,2})(?:st|nd|rd|th)?\s+(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\b/i,
+      );
+      const monthDayMatch = text.match(
+        /\b(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\s+(\d{1,2})(?:st|nd|rd|th)?\b/i,
+      );
+
+      if (dayMonthMatch) {
+        const day = parseInt(dayMonthMatch[1]);
+        const monthIdx = monthNames[dayMonthMatch[2].toLowerCase()];
+        const year = calendar?.year || now.getFullYear();
+        const date = new Date(year, monthIdx, day);
+        const monthLabel = getMonthName(monthIdx);
+        result.dateRange = {
+          start: date,
+          end: date,
+          label: `${day} ${monthLabel}`,
+        };
+        result.parts.push({
+          type: "date",
+          value: `${day} ${monthLabel}`,
+          icon: "📅",
+        });
+        text = text.replace(dayMonthMatch[0], "").trim();
+      } else if (monthDayMatch) {
+        const monthIdx = monthNames[monthDayMatch[1].toLowerCase()];
+        const day = parseInt(monthDayMatch[2]);
+        const year = calendar?.year || now.getFullYear();
+        const date = new Date(year, monthIdx, day);
+        const monthLabel = getMonthName(monthIdx);
+        result.dateRange = {
+          start: date,
+          end: date,
+          label: `${day} ${monthLabel}`,
+        };
+        result.parts.push({
+          type: "date",
+          value: `${day} ${monthLabel}`,
+          icon: "📅",
+        });
+        text = text.replace(monthDayMatch[0], "").trim();
+      } else {
+        // Try to match just a month name (shows entire month)
+        const monthOnlyMatch = text.match(
+          /\b(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\b/i,
+        );
+        if (monthOnlyMatch) {
+          const monthIdx = monthNames[monthOnlyMatch[1].toLowerCase()];
+          const year = calendar?.year || now.getFullYear();
+          const start = new Date(year, monthIdx, 1);
+          const end = new Date(year, monthIdx + 1, 0);
+          const monthLabel = getMonthName(monthIdx);
+          result.dateRange = { start, end, label: monthLabel };
+          result.parts.push({ type: "date", value: monthLabel, icon: "📅" });
+          text = text.replace(monthOnlyMatch[0], "").trim();
+        }
+      }
+    }
+
     // Check for keyword patterns
     if (text.match(/\b(birthday|birthdays|bday)\b/i)) {
       result.keywords.push("birthday");
@@ -438,13 +534,33 @@ export function AgendaView({
     return result;
   }, [filter]);
 
-  // Expanded event includes info about whether it's part of a multi-day range
-  type ExpandedEvent = Event & {
-    monthName: string;
-    displayDate: Date;
-    isMultiDay: boolean;
-    rangePosition?: "start" | "middle" | "end" | "only";
-  };
+  // Expanded event includes info about whether it's part of a multi-day range or recurring
+  type ExpandedEvent =
+    | (Event & {
+        monthName: string;
+        displayDate: Date;
+        isMultiDay: boolean;
+        isRecurring: boolean;
+        isBirthday?: false;
+        rangePosition?: "start" | "middle" | "end" | "only";
+      })
+    | {
+        // Birthday event (simplified structure)
+        id: string;
+        title: string;
+        monthName: string;
+        displayDate: Date;
+        isMultiDay: false;
+        isRecurring: false;
+        isBirthday: true;
+        birthdayData: BirthdayEvent;
+        // Satisfy Event-like properties
+        people: string[];
+        activity: null;
+        location: null;
+        status: "None";
+        rangePosition: "only";
+      };
 
   const allEvents = useMemo(() => {
     if (!calendar) return [];
@@ -461,6 +577,7 @@ export function AgendaView({
             monthName: month.name,
             displayDate: new Date(event.date.value),
             isMultiDay: false,
+            isRecurring: false,
             rangePosition: "only",
           });
         } else if (event.date.type === "Range") {
@@ -479,6 +596,7 @@ export function AgendaView({
               monthName,
               displayDate: new Date(current),
               isMultiDay: true,
+              isRecurring: false,
               rangePosition:
                 isStart && isEnd
                   ? "only"
@@ -511,17 +629,50 @@ export function AgendaView({
             monthName: getMonthName(monthIndex),
             displayDate,
             isMultiDay: false,
+            isRecurring: true,
             rangePosition: "only",
           });
         }
       }
     }
 
+    // Add birthdays as special events
+    for (const birthday of birthdays) {
+      const displayDate = new Date(
+        calendar.year,
+        birthday.date.month,
+        birthday.date.day,
+      );
+      const age = birthday.birthYear
+        ? calendar.year - birthday.birthYear
+        : null;
+      const title =
+        age !== null
+          ? `🎂 ${birthday.personName}'s birthday (${age})`
+          : `🎂 ${birthday.personName}'s birthday`;
+
+      events.push({
+        id: birthday.id,
+        title,
+        monthName: getMonthName(birthday.date.month),
+        displayDate,
+        isMultiDay: false,
+        isRecurring: false,
+        isBirthday: true,
+        birthdayData: birthday,
+        people: [birthday.personId],
+        activity: null,
+        location: null,
+        status: "None",
+        rangePosition: "only",
+      });
+    }
+
     // Sort by display date
     events.sort((a, b) => a.displayDate.getTime() - b.displayDate.getTime());
 
     return events;
-  }, [calendar]);
+  }, [calendar, birthdays]);
 
   // Apply filter
   const filteredEvents = useMemo(() => {
@@ -554,12 +705,14 @@ export function AgendaView({
         }
       }
 
-      // Filter by keywords
+      // Filter by keywords (special handling for "birthday")
       if (parsedFilter.keywords.length > 0) {
         const titleLower = evt.title.toLowerCase();
-        const hasKeyword = parsedFilter.keywords.some((k) =>
-          titleLower.includes(k.toLowerCase()),
-        );
+        const isBirthdayEvent = "isBirthday" in evt && evt.isBirthday;
+        const hasKeyword = parsedFilter.keywords.some((k) => {
+          if (k.toLowerCase() === "birthday" && isBirthdayEvent) return true;
+          return titleLower.includes(k.toLowerCase());
+        });
         if (!hasKeyword) return false;
       }
 
@@ -929,6 +1082,116 @@ export function AgendaView({
                           style={{ color: "var(--foreground-muted)" }}
                         >
                           {dateRangeLabel}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  // Render birthday events with special styling
+                  if ("isBirthday" in evt && evt.isBirthday) {
+                    const birthdayColor = evt.birthdayData.color || "#ec4899";
+                    return (
+                      <div
+                        key={`${evt.id}-${evtIdx}`}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg mb-2 cursor-default"
+                        style={{
+                          background: `color-mix(in oklch, ${birthdayColor} 15%, var(--secondary))`,
+                          borderLeft: `4px solid ${birthdayColor}`,
+                        }}
+                      >
+                        <span className="text-base">🎂</span>
+                        <span
+                          className="text-sm font-medium truncate flex-1"
+                          style={{ color: birthdayColor }}
+                        >
+                          {evt.birthdayData.personName}'s birthday
+                          {evt.birthdayData.birthYear && (
+                            <span style={{ opacity: 0.7 }}>
+                              {" "}
+                              (turns{" "}
+                              {calendar!.year - evt.birthdayData.birthYear})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  // Render recurring events as compact, less prominent bars
+                  if (evt.isRecurring) {
+                    return (
+                      <div
+                        key={`${evt.id}-${evtIdx}`}
+                        onClick={() => handleEventClick(evt)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-md mb-1.5 cursor-pointer transition-colors"
+                        style={{
+                          background: isSelected
+                            ? "var(--accent)"
+                            : "var(--muted)",
+                          borderLeft: `2px ${isTentative ? "dashed" : "solid"} color-mix(in oklch, ${color} 60%, transparent)`,
+                          boxShadow: isSelected
+                            ? "0 0 0 2px var(--primary)"
+                            : "none",
+                          opacity: isCancelled ? 0.5 : isTentative ? 0.7 : 0.85,
+                        }}
+                        onMouseOver={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background =
+                              "var(--secondary)";
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = "var(--muted)";
+                          }
+                        }}
+                      >
+                        <span className="text-sm" style={{ opacity: 0.7 }}>
+                          {icon}
+                        </span>
+                        <span
+                          className="text-xs truncate flex-1"
+                          style={{
+                            color: "var(--foreground-muted)",
+                            textDecoration: isCancelled
+                              ? "line-through"
+                              : undefined,
+                          }}
+                        >
+                          {evt.title}
+                        </span>
+                        {evt.people.length > 0 && (
+                          <span
+                            className="text-[10px] shrink-0"
+                            style={{ color: "var(--foreground-muted)" }}
+                          >
+                            {evt.people
+                              .map(
+                                (p) => p.charAt(0).toUpperCase() + p.slice(1),
+                              )
+                              .join(", ")}
+                          </span>
+                        )}
+                        {timeStr && (
+                          <span
+                            className="text-[10px] shrink-0"
+                            style={{
+                              color: "var(--foreground-muted)",
+                              opacity: 0.7,
+                            }}
+                          >
+                            {timeStr}
+                          </span>
+                        )}
+                        <span
+                          className="text-[10px] shrink-0"
+                          style={{
+                            color: "var(--foreground-muted)",
+                            opacity: 0.6,
+                          }}
+                          title="Recurring event"
+                        >
+                          🔄
                         </span>
                       </div>
                     );

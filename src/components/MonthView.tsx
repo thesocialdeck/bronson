@@ -1,9 +1,14 @@
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Calendar, Event, Activity } from "@/lib/types";
+import type { Calendar, Event, Activity, Person } from "@/lib/types";
+import type { BirthdayEvent } from "@/hooks/usePeople";
 import { getMonthName, expandRecurringEvents } from "@/lib/parser";
-import { getActivityColor, getActivityIcon } from "@/lib/colors";
+import {
+  getActivityColor,
+  getActivityIcon,
+  getPersonColor,
+} from "@/lib/colors";
 
 // Helper to get all dates an event spans
 function getEventDateRange(event: Event): { start: Date; end: Date } | null {
@@ -110,6 +115,8 @@ interface MonthViewProps {
   selectedMonth: number;
   onChangeMonth: (month: number) => void;
   getActivity: (id: string) => Activity | null;
+  getPerson?: (id: string) => Person | null;
+  birthdays?: BirthdayEvent[];
   onEventSelect?: (event: Event) => void;
   selectedEventId?: string;
 }
@@ -119,6 +126,8 @@ export function MonthView({
   selectedMonth,
   onChangeMonth,
   getActivity,
+  getPerson,
+  birthdays = [],
   onEventSelect,
   selectedEventId,
 }: MonthViewProps) {
@@ -200,6 +209,21 @@ export function MonthView({
 
     return map;
   }, [singleDayEvents, multiDayEvents, selectedMonth, year]);
+
+  // Group birthdays by day for this month
+  const birthdaysByDay = useMemo(() => {
+    const map = new Map<number, BirthdayEvent[]>();
+    for (const birthday of birthdays) {
+      if (birthday.date.month === selectedMonth) {
+        const day = birthday.date.day;
+        if (!map.has(day)) {
+          map.set(day, []);
+        }
+        map.get(day)!.push(birthday);
+      }
+    }
+    return map;
+  }, [birthdays, selectedMonth]);
 
   const today = new Date();
   const isCurrentMonth =
@@ -407,6 +431,7 @@ export function MonthView({
                   }
 
                   const dayEvents = eventsByDay.get(day) ?? [];
+                  const dayBirthdays = birthdaysByDay.get(day) ?? [];
                   const isToday = isCurrentMonth && today.getDate() === day;
                   const isWeekend = dayIndex >= 5;
 
@@ -444,30 +469,44 @@ export function MonthView({
                       )}
 
                       {/* Mobile: colored dots */}
-                      {dayEvents.length > 0 && (
+                      {(dayEvents.length > 0 || dayBirthdays.length > 0) && (
                         <div className="flex gap-0.5 flex-wrap md:hidden mt-auto">
-                          {dayEvents.slice(0, 4).map((event, i) => {
-                            const activity = event.activity
-                              ? getActivity(event.activity)
-                              : null;
-                            const dotColor =
-                              activity?.color ||
-                              getActivityColor(event.activity || "") ||
-                              "var(--activity-default)";
-                            return (
-                              <div
-                                key={i}
-                                className="w-1.5 h-1.5 rounded-full"
-                                style={{ backgroundColor: dotColor }}
-                              />
-                            );
-                          })}
-                          {dayEvents.length > 4 && (
+                          {/* Birthday dots first */}
+                          {dayBirthdays.map((birthday, i) => (
+                            <div
+                              key={`bday-${i}`}
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{
+                                backgroundColor: birthday.color || "#ec4899",
+                              }}
+                              title={`🎂 ${birthday.personName}`}
+                            />
+                          ))}
+                          {/* Event dots */}
+                          {dayEvents
+                            .slice(0, 4 - dayBirthdays.length)
+                            .map((event, i) => {
+                              const activity = event.activity
+                                ? getActivity(event.activity)
+                                : null;
+                              const dotColor =
+                                activity?.color ||
+                                getActivityColor(event.activity || "") ||
+                                "var(--activity-default)";
+                              return (
+                                <div
+                                  key={i}
+                                  className="w-1.5 h-1.5 rounded-full"
+                                  style={{ backgroundColor: dotColor }}
+                                />
+                              );
+                            })}
+                          {dayEvents.length + dayBirthdays.length > 4 && (
                             <span
                               className="text-[8px] leading-none"
                               style={{ color: "var(--foreground-muted)" }}
                             >
-                              +{dayEvents.length - 4}
+                              +{dayEvents.length + dayBirthdays.length - 4}
                             </span>
                           )}
                         </div>
@@ -476,21 +515,33 @@ export function MonthView({
                       {/* Desktop: event pills */}
                       <ScrollArea className="flex-1 hidden md:block">
                         <div className="space-y-0.5">
-                          {dayEvents.slice(0, 3).map((event) => (
-                            <EventPill
-                              key={event.id}
-                              event={event}
-                              getActivity={getActivity}
-                              onClick={() => handleEventClick(event)}
-                              isSelected={selectedEventId === event.id}
+                          {/* Birthday pills first */}
+                          {dayBirthdays.map((birthday) => (
+                            <BirthdayPill
+                              key={birthday.id}
+                              birthday={birthday}
+                              currentYear={year}
                             />
                           ))}
-                          {dayEvents.length > 3 && (
+                          {/* Event pills */}
+                          {dayEvents
+                            .slice(0, 3 - dayBirthdays.length)
+                            .map((event) => (
+                              <EventPill
+                                key={event.id}
+                                event={event}
+                                getActivity={getActivity}
+                                getPerson={getPerson}
+                                onClick={() => handleEventClick(event)}
+                                isSelected={selectedEventId === event.id}
+                              />
+                            ))}
+                          {dayEvents.length + dayBirthdays.length > 3 && (
                             <div
                               className="text-[10px] pl-1"
                               style={{ color: "var(--foreground-muted)" }}
                             >
-                              +{dayEvents.length - 3} more
+                              +{dayEvents.length + dayBirthdays.length - 3} more
                             </div>
                           )}
                         </div>
@@ -510,6 +561,7 @@ export function MonthView({
 interface EventPillProps {
   event: Event;
   getActivity: (id: string) => Activity | null;
+  getPerson?: (id: string) => Person | null;
   onClick: () => void;
   isSelected?: boolean;
 }
@@ -517,6 +569,7 @@ interface EventPillProps {
 function EventPill({
   event,
   getActivity,
+  getPerson,
   onClick,
   isSelected,
 }: EventPillProps) {
@@ -538,10 +591,21 @@ function EventPill({
   const isTentative = event.status === "Tentative";
   const isCancelled = event.status === "Cancelled";
 
+  // Get first person for display (show initial)
+  const firstPerson = event.people.length > 0 ? event.people[0] : null;
+  const personColor = firstPerson
+    ? getPersonColor(firstPerson, getPerson)
+    : null;
+  const personInitial = firstPerson
+    ? firstPerson.charAt(0).toUpperCase()
+    : null;
+  const additionalPeople =
+    event.people.length > 1 ? event.people.length - 1 : 0;
+
   return (
     <div
       onClick={onClick}
-      className="event-pill px-1.5 py-0.5 rounded truncate cursor-pointer transition-all"
+      className="event-pill px-1.5 py-0.5 rounded cursor-pointer transition-all flex items-center gap-1"
       style={{
         backgroundColor: isSelected
           ? `color-mix(in oklch, ${color} 30%, transparent)`
@@ -553,10 +617,54 @@ function EventPill({
         textDecoration: isCancelled ? "line-through" : undefined,
       }}
     >
-      {isTentative && <span className="mr-0.5">❓</span>}
-      {icon && <span className="mr-0.5">{icon}</span>}
-      {timeStr && <span style={{ opacity: 0.7 }}>{timeStr} </span>}
-      {event.title}
+      <span className="truncate flex-1">
+        {isTentative && <span className="mr-0.5">❓</span>}
+        {icon && <span className="mr-0.5">{icon}</span>}
+        {timeStr && <span style={{ opacity: 0.7 }}>{timeStr} </span>}
+        {event.title}
+      </span>
+      {firstPerson && (
+        <span
+          className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
+          style={{
+            backgroundColor: `color-mix(in oklch, ${personColor} 25%, transparent)`,
+            color: personColor || "var(--foreground-muted)",
+          }}
+          title={event.people.join(", ")}
+        >
+          {personInitial}
+          {additionalPeople > 0 && (
+            <span className="text-[7px]">+{additionalPeople}</span>
+          )}
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface BirthdayPillProps {
+  birthday: BirthdayEvent;
+  currentYear: number;
+}
+
+function BirthdayPill({ birthday, currentYear }: BirthdayPillProps) {
+  const color = birthday.color || "#ec4899"; // Pink default for birthdays
+  const age = birthday.birthYear ? currentYear - birthday.birthYear : null;
+
+  return (
+    <div
+      className="event-pill px-1.5 py-0.5 rounded flex items-center gap-1"
+      style={{
+        backgroundColor: `color-mix(in oklch, ${color} 15%, transparent)`,
+        borderLeft: `2px solid ${color}`,
+        color: color,
+      }}
+    >
+      <span className="text-[10px]">🎂</span>
+      <span className="truncate flex-1 text-[10px]">
+        {birthday.personName}
+        {age !== null && <span style={{ opacity: 0.7 }}> ({age})</span>}
+      </span>
     </div>
   );
 }
